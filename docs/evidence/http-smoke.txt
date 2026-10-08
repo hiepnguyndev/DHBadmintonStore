@@ -1,0 +1,1 @@
+PASS: real HTTP registration/login/JWT/profile/recommendation/address/cart/authorization/CORS; isolated MySQL 8.4.6
