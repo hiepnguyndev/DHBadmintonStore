@@ -60,7 +60,7 @@ public class AddressService {
         r.receiverName().trim(),
         r.receiverPhone().trim(),
         r.province().trim(),
-        r.district().trim(),
+        "",
         r.ward().trim(),
         r.detailAddress().trim(),
         r.isDefault());

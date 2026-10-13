@@ -31,7 +31,9 @@ class CommerceMySqlIntegrationTest {
   @Autowired MockMvc mvc;
   @Autowired ObjectMapper json;
   @Autowired JdbcTemplate jdbc;
+  @Autowired com.badminton.marketorder.repository.MarketplaceOrderRepository marketOrders;
   String admin, buyer, seller, other, inspector;
+  String categoryName = "Vợt IT " + UUID.randomUUID(), brandName = "Test Brand " + UUID.randomUUID();
   long buyerId, sellerId, address, otherAddress, category, brand;
 
   JsonNode call(String token, String method, String path, Object body, int expected)
@@ -86,8 +88,6 @@ class CommerceMySqlIntegrationTest {
                 "0901234567",
                 "province",
                 "HN",
-                "district",
-                "HD",
                 "ward",
                 "ML",
                 "detailAddress",
@@ -115,7 +115,7 @@ class CommerceMySqlIntegrationTest {
                 admin,
                 "POST",
                 "/api/categories",
-                Map.of("categoryName", "Vợt IT", "description", "Racket"),
+                Map.of("categoryName", categoryName, "description", "Racket"),
                 201)
             .path("categoryId")
             .asLong();
@@ -124,7 +124,7 @@ class CommerceMySqlIntegrationTest {
                 admin,
                 "POST",
                 "/api/brands",
-                Map.of("brandName", "Test Brand", "description", "Test"),
+                Map.of("brandName", brandName, "description", "Test"),
                 201)
             .path("brandId")
             .asLong();
@@ -488,22 +488,22 @@ class CommerceMySqlIntegrationTest {
         buyer,
         "PUT",
         "/api/categories/" + category,
-        Map.of("categoryName", "Vợt IT", "status", "INACTIVE"),
+        Map.of("categoryName", categoryName, "status", "INACTIVE"),
         403);
     call(
         admin,
         "PUT",
         "/api/categories/" + category,
-        Map.of("categoryName", "Vợt IT", "status", "INACTIVE"),
+        Map.of("categoryName", categoryName, "status", "INACTIVE"),
         200);
     call(admin, "DELETE", "/api/brands/" + brand, null, 200);
-    assertThat(call(null, "GET", "/api/categories", null, 200).toString()).doesNotContain("Vợt IT");
-    assertThat(call(null, "GET", "/api/brands", null, 200).toString()).doesNotContain("Test Brand");
+    assertThat(call(null, "GET", "/api/categories", null, 200).toString()).doesNotContain(categoryName);
+    assertThat(call(null, "GET", "/api/brands", null, 200).toString()).doesNotContain(brandName);
     assertThat(call(admin, "GET", "/api/categories", null, 200).toString())
-        .contains("Vợt IT")
+        .contains(categoryName)
         .contains("INACTIVE");
     assertThat(call(admin, "GET", "/api/brands", null, 200).toString())
-        .contains("Test Brand")
+        .contains(brandName)
         .contains("INACTIVE");
     assertThat(call(null, "GET", "/api/products/" + p, null, 200).path("status").asText())
         .isEqualTo("ACTIVE");
@@ -517,19 +517,19 @@ class CommerceMySqlIntegrationTest {
         admin,
         "PUT",
         "/api/categories/" + category,
-        Map.of("categoryName", "Vợt IT", "status", "ACTIVE"),
+        Map.of("categoryName", categoryName, "status", "ACTIVE"),
         200);
     call(
         admin,
         "PUT",
         "/api/brands/" + brand,
-        Map.of("brandName", "Test Brand", "status", "ACTIVE"),
+        Map.of("brandName", brandName, "status", "ACTIVE"),
         200);
     call(
         admin,
         "PUT",
         "/api/brands/" + brand,
-        Map.of("brandName", "Test Brand", "status", "DELETED"),
+        Map.of("brandName", brandName, "status", "DELETED"),
         400);
     var created =
         call(
@@ -679,11 +679,23 @@ class CommerceMySqlIntegrationTest {
   }
 
   @Test
-  void localDemoSeedRunsTwiceWithoutDuplicates() throws Exception {
+  void localDemoCleanupIsIdempotentAndPreservesOrderHistory() throws Exception {
+    long unused = product(2), ordered = product(2), genuine = product(2);
+    String originalSlug = jdbc.queryForObject("select slug from products where product_id=?", String.class, ordered);
+    jdbc.update("update products set slug=concat('cleaned-demo-', product_id) where slug='demo-attack'");
+    jdbc.update("update products set slug='demo-easy-start' where product_id=?", unused);
+    jdbc.update("update products set slug='demo-attack' where product_id=?", ordered);
+    String token = account("USER");
+    long a = address(token);
+    call(token, "POST", "/api/cart/items", Map.of("productId", ordered, "quantity", 1), 200);
+    call(token, "POST", "/api/orders", Map.of("addressId", a, "paymentMethod", "COD"), 201);
+    call(token, "POST", "/api/cart/items", Map.of("productId", unused, "quantity", 1), 200);
+    call(token, "POST", "/api/favorites/" + unused, null, 200);
     try (var connection = jdbc.getDataSource().getConnection()) {
       String sql =
           java.nio.file.Files.readString(java.nio.file.Path.of("../database/01_demo_catalog.sql"))
-              .replace("USE badminton_ecommerce;", "USE badminton_ecommerce_test;");
+              .replace("USE badminton_ecommerce;",
+                  "USE `" + connection.getCatalog().replace("`", "``") + "`;");
       var resource =
           new org.springframework.core.io.ByteArrayResource(
               sql.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -692,10 +704,17 @@ class CommerceMySqlIntegrationTest {
     }
     assertThat(
             jdbc.queryForObject(
-                "select count(*) from products where slug in"
-                    + " ('demo-easy-start','demo-all-round','demo-attack')",
-                Long.class))
-        .isEqualTo(3);
+                "select count(*) from products where product_id=?", Long.class, unused))
+        .isZero();
+    assertThat(jdbc.queryForObject("select status from products where product_id=?", String.class, ordered))
+        .isEqualTo("INACTIVE");
+    assertThat(jdbc.queryForObject("select stock from products where product_id=?", Integer.class, ordered))
+        .isZero();
+    assertThat(jdbc.queryForObject("select count(*) from order_items where product_id=?", Long.class, ordered))
+        .isEqualTo(1);
+    assertThat(jdbc.queryForObject("select status from products where product_id=?", String.class, genuine))
+        .isEqualTo("ACTIVE");
+    jdbc.update("update products set slug=? where product_id=?", originalSlug, ordered);
   }
 
   private List<Integer> race(
@@ -900,6 +919,21 @@ class CommerceMySqlIntegrationTest {
                 Long.class,
                 o))
         .isEqualTo(1);
+  }
+
+  @Test
+  void utcTimestampsMatchDatabaseAndDoNotExpireFreshOrders() throws Exception {
+    long o = purchase(listing());
+    var order = call(buyer, "GET", "/api/market-orders/" + o, null, 200).path("order");
+    String stored = jdbc.queryForObject(
+        "select date_format(created_at, '%Y-%m-%dT%H:%i:%s.%f') from marketplace_orders where market_order_id=?",
+        String.class, o);
+    assertThat(java.time.LocalDateTime.parse(stored))
+        .isEqualTo(java.time.LocalDateTime.parse(order.path("createdAt").asText()));
+    assertThat(marketOrders.expiredIds(
+        com.badminton.marketorder.entity.MarketOrderStatus.PENDING_PAYMENT,
+        java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).minusMinutes(30)))
+        .doesNotContain(o);
   }
 
   @Test

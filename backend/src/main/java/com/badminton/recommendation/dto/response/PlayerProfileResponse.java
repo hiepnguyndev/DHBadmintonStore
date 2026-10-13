@@ -17,5 +17,13 @@ public record PlayerProfileResponse(
     String preferredWeight,
     BigDecimal minBudget,
     BigDecimal maxBudget,
+    String dominantHand,
+    String balanceType,
+    String shaftFlexibility,
+    String shirtSize,
+    String pantsSize,
+    String shoeSize,
+    String favoriteColors,
+    String favoriteBrands,
     LocalDateTime createdAt,
     LocalDateTime updatedAt) {}

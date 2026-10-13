@@ -1,6 +1,7 @@
 package com.badminton.order.entity;
 
 import com.badminton.product.entity.Product;
+import com.badminton.product.entity.ProductVariant;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.*;
@@ -20,6 +21,17 @@ public class OrderItem {
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "product_id", nullable = false)
   private Product product;
+
+  @ManyToOne(fetch=FetchType.LAZY) @JoinColumn(name="variant_id") private ProductVariant variant;
+  @Column(name="variant_sku",length=100) private String variantSku;
+  @Column(name="variant_color",length=80) private String variantColor;
+  @Column(name="variant_size",length=50) private String variantSize;
+  @Column(name="legacy_stock_rebased",nullable=false) private Boolean legacyStockRebased=false;
+  public ProductVariant getVariant(){return variant;} public void setVariant(ProductVariant v){variant=v;}
+  public String getVariantSku(){return variantSku;} public void setVariantSku(String v){variantSku=v;}
+  public String getVariantColor(){return variantColor;} public void setVariantColor(String v){variantColor=v;}
+  public String getVariantSize(){return variantSize;} public void setVariantSize(String v){variantSize=v;}
+  public Boolean getLegacyStockRebased(){return legacyStockRebased;} public void setLegacyStockRebased(Boolean v){legacyStockRebased=v;}
 
   @Column(name = "product_name", nullable = false, length = 255)
   private String productName;

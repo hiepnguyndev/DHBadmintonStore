@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#F7EFFE"/></linearGradient></defs>
+    <rect width="800" height="1000" fill="url(#bg)"/><rect x="34" y="34" width="732" height="930" rx="38" fill="#ffffff" fill-opacity=".46" stroke="#EDE9FE" stroke-width="3"/>
+    <text x="60" y="94" font-size="25" font-weight="800" fill="#6D28D9" font-family="DejaVu Sans, Arial,sans-serif">DH BADMINTON STORE</text>
+    <rect x="60" y="129" rx="16" width="268" height="44" fill="#EDE9FE"/><text x="78" y="159" font-size="19" font-weight="700" fill="#6D28D9" font-family="DejaVu Sans,Arial,sans-serif">QUẦN ÁO</text>
+    <path d="M278 256L342 218Q404 257 462 218L529 256L603 385L528 429L486 358V592H316V358L274 429L198 385Z" fill="#6D28D9" fill-opacity=".15" stroke="#6D28D9" stroke-width="15" stroke-linejoin="round"/><path d="M343 226Q400 312 461 226" stroke="#6D28D9" stroke-width="10" fill="none"/><rect x="50" y="709" width="700" height="4" rx="2" fill="#EDE9FE"/>
+    <text x="60" y="750" font-size="23" font-weight="800" fill="#6D28D9" font-family="DejaVu Sans,Arial,sans-serif">YONEX • DH-SEED-0073</text>
+    <g font-family="DejaVu Sans, Arial,sans-serif"><text x="60" y="790" font-size="33" font-weight="700" fill="#172238">VA CLEAR PLAY MUSCLE TANK</text></g>
+    <rect x="60" y="901" width="680" height="35" rx="9" fill="#FCE7E7"/><text x="400" y="926" text-anchor="middle" font-size="17" font-weight="750" fill="#A51D1D" font-family="DejaVu Sans,Arial,sans-serif">HÌNH MINH HỌA - KHÔNG PHẢI ẢNH SẢN PHẨM</text>
+    </svg>

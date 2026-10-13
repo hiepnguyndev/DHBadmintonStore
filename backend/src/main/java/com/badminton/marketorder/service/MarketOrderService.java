@@ -160,8 +160,6 @@ public class MarketOrderService {
             + ", "
             + address.getWard()
             + ", "
-            + address.getDistrict()
-            + ", "
             + address.getProvince());
     o.setOrderStatus(MarketOrderStatus.PENDING_PAYMENT);
     orders.saveAndFlush(o);

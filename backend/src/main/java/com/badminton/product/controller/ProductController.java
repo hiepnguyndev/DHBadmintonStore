@@ -28,6 +28,7 @@ public class ProductController {
       @RequestParam(required = false) String flex,
       @RequestParam(required = false) String playStyle,
       @RequestParam(required = false) String skillLevel,
+      @RequestParam(defaultValue = "false") boolean onSale,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) String sort) {
@@ -44,6 +45,7 @@ public class ProductController {
             flex,
             playStyle,
             skillLevel,
+            onSale,
             page,
             size,
             sort));

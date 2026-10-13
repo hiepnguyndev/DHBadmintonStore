@@ -26,6 +26,7 @@ public class ProductService {
   private final BrandRepository brands;
   private final RacketSpecificationRepository specs;
   private final ProductImageRepository images;
+  private final ProductVariantRepository variants;
   private final Access access;
 
   public ProductService(
@@ -34,12 +35,14 @@ public class ProductService {
       BrandRepository brands,
       RacketSpecificationRepository specs,
       ProductImageRepository images,
+      ProductVariantRepository variants,
       Access access) {
     this.products = products;
     this.categories = categories;
     this.brands = brands;
     this.specs = specs;
     this.images = images;
+    this.variants = variants;
     this.access = access;
   }
 
@@ -48,6 +51,22 @@ public class ProductService {
         p,
         specs.findByProductProductId(p.getProductId()).orElse(null),
         images.findByProductProductIdOrderBySortOrderAsc(p.getProductId()));
+  }
+
+  /** Maps a product batch with two bulk lookups instead of two extra queries per product. */
+  public List<ProductResponse> views(Collection<Product> productBatch) {
+    if (productBatch.isEmpty()) return List.of();
+    var ids = productBatch.stream().map(Product::getProductId).toList();
+    var specByProduct = new HashMap<Long, RacketSpecification>();
+    specs.findByProductProductIdIn(ids)
+        .forEach(s -> specByProduct.put(s.getProduct().getProductId(), s));
+    var imagesByProduct = new HashMap<Long, List<ProductImage>>();
+    images.findByProductProductIdInOrderBySortOrderAsc(ids)
+        .forEach(i -> imagesByProduct.computeIfAbsent(i.getProduct().getProductId(), k -> new ArrayList<>()).add(i));
+    return productBatch.stream()
+        .map(p -> ProductMapper.toResponse(p, specByProduct.get(p.getProductId()),
+            imagesByProduct.getOrDefault(p.getProductId(), List.of())))
+        .toList();
   }
 
   @Transactional(readOnly = true)
@@ -75,11 +94,17 @@ public class ProductService {
       String flex,
       String playStyle,
       String skillLevel,
+      boolean onSale,
       int page,
       int size,
       String sort) {
     org.springframework.data.jpa.domain.Specification<Product> filter =
         (r, q, b) -> r.get("status").in(ProductStatus.ACTIVE, ProductStatus.OUT_OF_STOCK);
+    if (onSale)
+      filter = filter.and((r, q, b) ->
+          b.and(b.isTrue(r.get("promotionPublished")), b.isNotNull(r.get("salePrice")),
+              b.greaterThanOrEqualTo(r.<BigDecimal>get("salePrice"), BigDecimal.ZERO),
+              b.lessThan(r.<BigDecimal>get("salePrice"), r.<BigDecimal>get("price"))));
     if (keyword != null && !keyword.isBlank())
       filter = filter.and(contains("productName", keyword));
     if (categoryId != null) filter = filter.and(eq("category.categoryId", categoryId));
@@ -124,17 +149,16 @@ public class ProductService {
                     .where(terms.toArray(jakarta.persistence.criteria.Predicate[]::new));
                 return b.exists(sq);
               });
-    return PageResponse.from(
-        products
-            .findAll(
+    var result = products.findAll(
                 filter,
                 page(
                     page,
                     size,
                     sort,
                     "createdAt",
-                    Set.of("createdAt", "price", "productName", "productId")))
-            .map(this::view));
+                    Set.of("createdAt", "price", "productName", "productId")));
+    return new PageResponse<>(views(result.getContent()), result.getNumber(), result.getSize(),
+        result.getTotalElements(), result.getTotalPages());
   }
 
   public ProductResponse save(Long id, ProductRequest r) {
@@ -148,12 +172,21 @@ public class ProductService {
     p.setDescription(r.description());
     p.setPrice(r.price());
     p.setSalePrice(r.salePrice());
-    p.setStock(r.stock());
+    boolean variantManaged=id!=null&&variants.existsByProductProductId(id);
+    if(!variantManaged)p.setStock(r.stock());
     p.setStatus(
-        r.stock() == 0 && r.status() == ProductStatus.ACTIVE
-            ? ProductStatus.OUT_OF_STOCK
-            : r.status());
+        variantManaged
+            ? (r.status() == ProductStatus.INACTIVE
+                ? ProductStatus.INACTIVE
+                : p.getStock() == 0 ? ProductStatus.OUT_OF_STOCK : ProductStatus.ACTIVE)
+            : (r.stock() == 0 && r.status() == ProductStatus.ACTIVE
+                ? ProductStatus.OUT_OF_STOCK
+                : r.status()));
     if (id == null) p.setSlug(slug(r.productName()));
+    if (p.getStatus() == ProductStatus.INACTIVE || p.getSalePrice() == null
+        || p.getSalePrice().compareTo(p.getPrice()) >= 0) {
+      p.setPromotionPublished(false);
+    }
     products.saveAndFlush(p);
     if (r.specification() != null) {
       RacketSpecification s =
@@ -179,6 +212,8 @@ public class ProductService {
   }
 
   public void disable(Long id) {
-    found(products.lock(id), "PRODUCT_NOT_FOUND").setStatus(ProductStatus.INACTIVE);
+    Product product = found(products.lock(id), "PRODUCT_NOT_FOUND");
+    product.setStatus(ProductStatus.INACTIVE);
+    product.setPromotionPublished(false);
   }
 }

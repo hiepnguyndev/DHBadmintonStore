@@ -37,6 +37,9 @@ public class Product extends com.badminton.common.entity.BaseEntity {
   @Column(name = "sale_price", nullable = true, precision = 15, scale = 2)
   private BigDecimal salePrice;
 
+  @Column(name = "promotion_published", nullable = false)
+  private boolean promotionPublished;
+
   @Column(name = "stock", nullable = false)
   private Integer stock;
 
@@ -109,6 +112,14 @@ public class Product extends com.badminton.common.entity.BaseEntity {
 
   public void setSalePrice(BigDecimal value) {
     salePrice = value;
+  }
+
+  public boolean isPromotionPublished() {
+    return promotionPublished;
+  }
+
+  public void setPromotionPublished(boolean value) {
+    promotionPublished = value;
   }
 
   public Integer getStock() {

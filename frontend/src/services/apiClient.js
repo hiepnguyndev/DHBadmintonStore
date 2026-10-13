@@ -9,7 +9,9 @@ export const setUnauthorizedHandler = (handler) => {
   onUnauthorized = handler;
 };
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    (import.meta.env.DEV ? "http://localhost:8080/api" : "/api"),
   timeout: 15000,
 });
 apiClient.interceptors.request.use((config) => {
@@ -29,9 +31,12 @@ apiClient.interceptors.response.use(
 export function errorMessage(error) {
   return (
     error.response?.data?.message ||
+    (error.message === "Vui lòng chọn màu hoặc size trước khi thêm vào giỏ."
+      ? error.message
+      :
     (error.code === "ECONNABORTED"
       ? "Máy chủ phản hồi quá lâu. Vui lòng thử lại."
-      : "Không kết nối được máy chủ. Kiểm tra backend và thử lại.")
+      : "Không kết nối được máy chủ. Kiểm tra backend và thử lại."))
   );
 }
 export function applyServerErrors(error, setError) {

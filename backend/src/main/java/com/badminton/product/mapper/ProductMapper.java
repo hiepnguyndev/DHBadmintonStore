@@ -26,6 +26,7 @@ public final class ProductMapper {
         p.getPrice(),
         p.getSalePrice(),
         effectivePrice(p),
+        p.isPromotionPublished(),
         p.getStock(),
         p.getThumbnailUrl(),
         p.getStatus(),

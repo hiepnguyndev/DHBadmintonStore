@@ -25,9 +25,17 @@ public class StatisticsService {
     r.put(
         "shopRevenue",
         jdbc.queryForObject(
-            "select coalesce(sum(total_amount),0) from orders where order_status='COMPLETED' and"
-                + " payment_status='PAID'",
+            "select coalesce(sum(total_amount),0) from orders where payment_status='PAID'",
             BigDecimal.class));
+    r.put(
+        "pendingOrders",
+        jdbc.queryForObject(
+            "select count(*) from orders where order_status='PENDING'", Long.class));
+    r.put(
+        "lowStockProducts",
+        jdbc.queryForObject(
+            "select count(*) from products where status='ACTIVE' and stock between 1 and 5",
+            Long.class));
     for (var q :
         List.of(
             new String[] {"shopOrders", "orders"},
@@ -73,7 +81,7 @@ public class StatisticsService {
         "select date_format(created_at, '"
             + format
             + "') as period, sum(total_amount) as revenue, count(*) as orderCount from orders where"
-            + " order_status='COMPLETED' and payment_status='PAID' and created_at>=? and"
+            + " payment_status='PAID' and created_at>=? and"
             + " created_at<? group by period order by period",
         from.atStartOfDay(),
         to.plusDays(1).atStartOfDay());
@@ -85,7 +93,7 @@ public class StatisticsService {
         "select i.product_id as productId, p.product_name as productName, sum(i.quantity) as"
             + " quantity, sum(i.total_price) as revenue from order_items i join orders o on"
             + " o.order_id=i.order_id join products p on p.product_id=i.product_id where"
-            + " o.order_status='COMPLETED' and o.payment_status='PAID' group by"
+            + " o.payment_status='PAID' group by"
             + " i.product_id,p.product_name order by quantity desc,i.product_id limit 10");
   }
 

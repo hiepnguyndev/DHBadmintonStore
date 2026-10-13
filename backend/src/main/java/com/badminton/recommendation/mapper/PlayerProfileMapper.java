@@ -17,6 +17,14 @@ public final class PlayerProfileMapper {
         e.getPreferredWeight(),
         e.getMinBudget(),
         e.getMaxBudget(),
+        e.getDominantHand(),
+        e.getBalanceType(),
+        e.getShaftFlexibility(),
+        e.getShirtSize(),
+        e.getPantsSize(),
+        e.getShoeSize(),
+        e.getFavoriteColors(),
+        e.getFavoriteBrands(),
         e.getCreatedAt(),
         e.getUpdatedAt());
   }

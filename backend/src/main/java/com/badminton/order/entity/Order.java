@@ -56,6 +56,9 @@ public class Order extends com.badminton.common.entity.BaseEntity {
   @Column(name = "note", nullable = true, columnDefinition = "TEXT")
   private String note;
 
+  @Column(name = "inventory_committed", nullable = false)
+  private Boolean inventoryCommitted = false;
+
   public Long getOrderId() {
     return orderId;
   }
@@ -167,4 +170,8 @@ public class Order extends com.badminton.common.entity.BaseEntity {
   public void setNote(String value) {
     note = value;
   }
+
+  public Boolean getInventoryCommitted() { return inventoryCommitted; }
+
+  public void setInventoryCommitted(Boolean value) { inventoryCommitted = value; }
 }

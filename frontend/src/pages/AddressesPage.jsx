@@ -13,11 +13,11 @@ import { useForm } from "react-hook-form";
 import { userApi } from "../services/userApi";
 import { errorMessage, applyServerErrors } from "../services/apiClient";
 import FormField from "../components/FormField";
+import { MapPin, Pencil, Plus, Trash2 } from "../components/icons";
 const empty = {
   receiverName: "",
   receiverPhone: "",
   province: "",
-  district: "",
   ward: "",
   detailAddress: "",
   isDefault: false,
@@ -26,8 +26,7 @@ const fields = [
   ["receiverName", "Tên người nhận", 100],
   ["receiverPhone", "Số điện thoại người nhận", 20],
   ["province", "Tỉnh / Thành phố", 100],
-  ["district", "Quận / Huyện", 100],
-  ["ward", "Phường / Xã", 100],
+  ["ward", "Xã / Phường", 100],
   ["detailAddress", "Địa chỉ chi tiết", 255],
 ];
 export default function AddressesPage() {
@@ -105,8 +104,8 @@ export default function AddressesPage() {
           <span className="eyebrow">SỔ ĐỊA CHỈ</span>
           <h1>Giao đến nơi bạn muốn.</h1>
         </div>
-        <Button variant="contained" onClick={() => edit(null)}>
-          + Thêm địa chỉ
+        <Button variant="contained" startIcon={<Plus size={17} />} onClick={() => edit(null)}>
+          Thêm địa chỉ
         </Button>
       </div>
       {notice && (
@@ -127,7 +126,7 @@ export default function AddressesPage() {
       ) : !error && items.length === 0 ? (
         <div className="empty-state">
           <span className="empty-symbol" aria-hidden="true">
-            ⌂
+            <MapPin size={28} />
           </span>
           <h2>Chưa có địa chỉ nào</h2>
           <p>Thêm địa chỉ nhận hàng đầu tiên của bạn.</p>
@@ -149,10 +148,10 @@ export default function AddressesPage() {
               <p className="muted">
                 {item.detailAddress}
                 <br />
-                {item.ward}, {item.district}, {item.province}
+                {item.ward}, {item.province}
               </p>
-              <Button onClick={() => edit(item)}>Chỉnh sửa</Button>
-              <Button color="error" onClick={() => setDeleting(item)}>
+              <Button startIcon={<Pencil size={15} />} onClick={() => edit(item)}>Chỉnh sửa</Button>
+              <Button startIcon={<Trash2 size={15} />} color="error" onClick={() => setDeleting(item)}>
                 Xóa
               </Button>
             </article>

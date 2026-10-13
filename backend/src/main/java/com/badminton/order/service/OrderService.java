@@ -30,8 +30,14 @@ public class OrderService {
   private final CartRepository carts;
   private final CartItemRepository cartItems;
   private final ProductRepository products;
+  private final com.badminton.product.repository.ProductVariantRepository variants;
   private final AddressRepository addresses;
   private final Access access;
+  private final com.badminton.payment.PaymentSettings paymentSettings;
+  private final com.badminton.payment.PaymentRepository payments;
+  private final com.badminton.review.repository.ReviewRepository reviews;
+  private final com.badminton.audit.service.AuditService audit;
+  private final OrderInventoryService inventory;
 
   public OrderService(
       OrderRepository orders,
@@ -39,15 +45,27 @@ public class OrderService {
       CartRepository carts,
       CartItemRepository cartItems,
       ProductRepository products,
+      com.badminton.product.repository.ProductVariantRepository variants,
       AddressRepository addresses,
-      Access access) {
+      Access access,
+      com.badminton.payment.PaymentSettings paymentSettings,
+      com.badminton.payment.PaymentRepository payments,
+      com.badminton.review.repository.ReviewRepository reviews,
+      com.badminton.audit.service.AuditService audit,
+      OrderInventoryService inventory) {
     this.orders = orders;
     this.lines = lines;
     this.carts = carts;
     this.cartItems = cartItems;
     this.products = products;
+    this.variants = variants;
     this.addresses = addresses;
     this.access = access;
+    this.paymentSettings = paymentSettings;
+    this.payments = payments;
+    this.reviews = reviews;
+    this.audit = audit;
+    this.inventory = inventory;
   }
 
   @org.springframework.beans.factory.annotation.Value("${app.shop.shipping-fee:0}")
@@ -69,10 +87,19 @@ public class OrderService {
   }
 
   @Transactional(readOnly = true)
-  public PageResponse<OrderResponse> list(boolean admin, OrderStatus status, int page, int size) {
+  public PageResponse<OrderResponse> list(
+      boolean admin, OrderStatus status, LocalDate date, int page, int size) {
     org.springframework.data.jpa.domain.Specification<Order> filter =
         admin ? all() : eq("user.userId", access.current().id());
     if (status != null) filter = filter.and(eq("orderStatus", status));
+    if (date != null) {
+      var vietnam = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+      var from = date.atStartOfDay(vietnam).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime();
+      var until = date.plusDays(1).atStartOfDay(vietnam).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime();
+      filter = filter.and((root, query, builder) -> builder.and(
+          builder.greaterThanOrEqualTo(root.get("createdAt"), from),
+          builder.lessThan(root.get("createdAt"), until)));
+    }
     return PageResponse.from(
         orders
             .findAll(filter, page(page, size, null, "createdAt", Set.of("createdAt")))
@@ -88,18 +115,19 @@ public class OrderService {
         found(
             addresses.findByAddressIdAndUserUserId(r.addressId(), u.getUserId()),
             "ADDRESS_NOT_FOUND");
-    bad(
-        r.paymentMethod() == PaymentMethod.COD || r.paymentMethod() == PaymentMethod.BANK_TRANSFER,
-        "MVP hỗ trợ COD và BANK_TRANSFER mô phỏng");
+    paymentSettings.requireEnabled(r.paymentMethod());
     BigDecimal subtotal = BigDecimal.ZERO;
     var locked = new ArrayList<Product>();
+    var demandByProduct = new HashMap<Long,Integer>();
+    for(var row:rows)demandByProduct.merge(row.getProduct().getProductId(),row.getQuantity(),Integer::sum);
     for (var row : rows) {
       Product p = found(products.lock(row.getProduct().getProductId()), "PRODUCT_NOT_FOUND");
       require(
-          p.getStatus() == ProductStatus.ACTIVE && p.getStock() >= row.getQuantity(),
+          p.getStatus() == ProductStatus.ACTIVE && p.getStock() >= demandByProduct.get(p.getProductId()),
           "PRODUCT_OUT_OF_STOCK",
           "Sản phẩm không đủ số lượng");
       locked.add(p);
+      if(row.getVariant()!=null){var v=found(variants.lock(row.getVariant().getVariantId()),"VARIANT_NOT_FOUND");require("ACTIVE".equals(v.getStatus())&&v.getStock()>=row.getQuantity(),"VARIANT_OUT_OF_STOCK","Biến thể không đủ tồn kho");}
       subtotal =
           subtotal.add(
               ProductMapper.effectivePrice(p).multiply(BigDecimal.valueOf(row.getQuantity())));
@@ -114,18 +142,14 @@ public class OrderService {
             + ", "
             + address.getWard()
             + ", "
-            + address.getDistrict()
-            + ", "
             + address.getProvince());
     o.setSubtotalAmount(money(subtotal));
     o.setShippingFee(money(shippingFee));
     o.setDiscountAmount(BigDecimal.ZERO);
     o.setTotalAmount(money(subtotal.add(shippingFee)));
+    paymentSettings.validateAmount(r.paymentMethod(), o.getTotalAmount());
     o.setPaymentMethod(r.paymentMethod());
-    o.setPaymentStatus(
-        r.paymentMethod() == PaymentMethod.BANK_TRANSFER
-            ? PaymentStatus.PAID
-            : PaymentStatus.UNPAID);
+    o.setPaymentStatus(PaymentStatus.UNPAID);
     o.setOrderStatus(OrderStatus.PENDING);
     o.setNote(r.note());
     orders.saveAndFlush(o);
@@ -137,16 +161,35 @@ public class OrderService {
       i.setProduct(p);
       i.setProductName(p.getProductName());
       i.setProductImage(p.getThumbnailUrl());
+      if(row.getVariant()!=null){var v=found(variants.lock(row.getVariant().getVariantId()),"VARIANT_NOT_FOUND");i.setVariant(v);i.setVariantSku(v.getSku());i.setVariantColor(v.getColor());i.setVariantSize(v.getSize());}
       i.setQuantity(row.getQuantity());
       i.setUnitPrice(ProductMapper.effectivePrice(p));
       i.setTotalPrice(money(i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity()))));
       lines.save(i);
-      p.setStock(p.getStock() - i.getQuantity());
-      if (p.getStock() == 0) p.setStatus(ProductStatus.OUT_OF_STOCK);
     }
     cartItems.deleteAll(rows);
     lines.flush();
     return view(o);
+  }
+
+  public record ResetOrdersResult(int ordersDeleted, int orderItemsDeleted) {}
+
+  /** Deletes only shop-order history; revenue is derived from these rows and resets with them. */
+  public ResetOrdersResult resetAll() {
+    var allOrders = orders.findAll();
+    if (allOrders.isEmpty()) return new ResetOrdersResult(0, 0);
+    var orderIds = allOrders.stream().map(Order::getOrderId).toList();
+    int itemCount = 0;
+    for (var order : allOrders) {
+      itemCount += lines.findByOrderOrderIdOrderByProductProductIdAsc(order.getOrderId()).size();
+      inventory.release(order);
+    }
+    reviews.deleteByOrderItemOrderOrderIdIn(orderIds);
+    payments.deleteByOrderIdIn(orderIds);
+    lines.deleteByOrderOrderIdIn(orderIds);
+    orders.deleteAllByIdInBatch(orderIds);
+    audit.record("RESET_SHOP_ORDERS", "Order", null, Map.of("orders", orderIds.size(), "items", itemCount), Map.of("orders", 0, "shopRevenue", 0));
+    return new ResetOrdersResult(orderIds.size(), itemCount);
   }
 
   public OrderDetail cancel(Long id) {
@@ -156,12 +199,7 @@ public class OrderService {
         o.getOrderStatus() == OrderStatus.PENDING || o.getOrderStatus() == OrderStatus.CONFIRMED,
         "ORDER_INVALID_STATUS",
         "Chỉ hủy trước giai đoạn chuẩn bị hàng");
-    for (var i : lines.findByOrderOrderIdOrderByProductProductIdAsc(id)) {
-      Product p = found(products.lock(i.getProduct().getProductId()), "PRODUCT_NOT_FOUND");
-      p.setStock(p.getStock() + i.getQuantity());
-      if (p.getStatus() == ProductStatus.OUT_OF_STOCK) p.setStatus(ProductStatus.ACTIVE);
-    }
-    if (o.getPaymentStatus() == PaymentStatus.PAID) o.setPaymentStatus(PaymentStatus.REFUNDED);
+    if (o.getPaymentStatus() == PaymentStatus.PAID) o.setPaymentStatus(PaymentStatus.REFUND_PENDING);
     o.setOrderStatus(OrderStatus.CANCELLED);
     return view(o);
   }
@@ -178,9 +216,13 @@ public class OrderService {
         };
     require(
         expected == next, "ORDER_INVALID_STATUS", "Không thể bỏ qua hoặc lùi trạng thái đơn hàng");
+    require(o.getPaymentMethod() == PaymentMethod.COD || next == OrderStatus.CONFIRMED || o.getPaymentStatus() == PaymentStatus.PAID,
+        "PAYMENT_REQUIRED", "Cần xác nhận thanh toán trước khi chuẩn bị hoặc giao hàng.");
     o.setOrderStatus(next);
-    if (next == OrderStatus.COMPLETED && o.getPaymentStatus() == PaymentStatus.UNPAID)
+    if (next == OrderStatus.COMPLETED && o.getPaymentMethod() == PaymentMethod.COD && o.getPaymentStatus() == PaymentStatus.UNPAID) {
       o.setPaymentStatus(PaymentStatus.PAID);
+      inventory.commit(o);
+    }
     return view(o);
   }
 }

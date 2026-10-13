@@ -6,4 +6,4 @@ import jakarta.validation.constraints.*;
 import java.time.*;
 
 public record CartItemRequest(
-    @NotNull Long productId, @NotNull @Min(1) @Max(10000) Integer quantity) {}
+    @NotNull Long productId, Long variantId, @NotNull @Min(1) @Max(10000) Integer quantity) {}

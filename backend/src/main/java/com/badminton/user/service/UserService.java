@@ -49,7 +49,7 @@ public class UserService {
     if (phone != null && !phone.equals(u.getPhone()) && users.existsByPhone(phone))
       throw new BusinessException(
           HttpStatus.CONFLICT, "PHONE_ALREADY_EXISTS", "Số điện thoại đã được đăng ký");
-    u.updateProfile(r.fullName().trim(), phone, r.avatarUrl());
+    u.updateProfile(r.fullName().trim(), phone, r.avatarUrl(), r.dateOfBirth(), r.gender(), r.heightCm(), r.weightKg());
     return mapper.toResponse(u);
   }
 

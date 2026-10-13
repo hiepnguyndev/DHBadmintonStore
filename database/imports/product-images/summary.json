@@ -1,0 +1,15 @@
+{
+  "products": 150,
+  "with_reference_photo_urls": 47,
+  "illustrative_fallback_primary": 103,
+  "svg_files": 150,
+  "categories": {
+    "vot": 46,
+    "giay": 18,
+    "tui": 14,
+    "quan-ao": 24,
+    "cuoc": 18,
+    "qua-cau": 13,
+    "quan-can": 17
+  }
+}

@@ -14,4 +14,6 @@ public interface RacketSpecificationRepository
   Optional<RacketSpecification> lock(@Param("id") Long id);
 
   Optional<RacketSpecification> findByProductProductId(Long id);
+
+  List<RacketSpecification> findByProductProductIdIn(Collection<Long> ids);
 }

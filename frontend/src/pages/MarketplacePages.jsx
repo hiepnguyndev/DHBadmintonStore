@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Package, Plus, Search, ShieldCheck } from "../components/icons";
 import {
   api,
   useData,
@@ -11,6 +12,7 @@ import {
   Upload,
   Pager,
   Badge,
+  formatDate,
   money,
   media,
 } from "../components/CommerceUI";
@@ -23,9 +25,9 @@ function ListingCard({ item }) {
           {item.images[0] ? (
             <img src={media(item.images[0].imageUrl)} alt={l.productName} />
           ) : (
-            <span>CHƯA CÓ ẢNH</span>
+            <span className="no-photo"><Package size={36} />CHƯA CÓ ẢNH</span>
           )}
-          {item.verified && <strong className="score">Đã kiểm định</strong>}
+          {item.verified && <strong className="score"><ShieldCheck size={13} />Đã kiểm định</strong>}
         </div>
         <div className="product-copy">
           <h3>{l.productName}</h3>
@@ -56,7 +58,7 @@ export function MarketplacePage({ mine = false }) {
       subtitle="Xem tình trạng, báo cáo kiểm định và uy tín người bán trước khi giao dịch."
       action={
         <Link className="button primary" to="/sell">
-          Đăng bán dụng cụ →
+          <Plus size={16} />Đăng bán dụng cụ
         </Link>
       }
     >
@@ -97,10 +99,10 @@ export function MarketplacePage({ mine = false }) {
             Giá tối đa
             <input name="maxPrice" type="number" min="0" />
           </label>
-          <button className="primary">Tìm tin</button>
+          <button className="primary"><Search size={15} />Tìm tin</button>
         </form>
       )}
-      <State query={q} empty={!q.data?.content?.length}>
+      <State query={q} empty={!q.data?.content?.length} emptyTitle={mine ? "Bạn chưa có tin đăng" : "Chưa có tin đăng phù hợp"} emptyMessage={mine ? "Đăng bán dụng cụ để bắt đầu hành trình mới." : "Các dụng cụ được đăng bán sẽ xuất hiện tại đây."}>
         <div className="product-grid">
           {q.data?.content?.map((l) => (
             <ListingCard key={l.listing.listingId} item={l} />
@@ -462,6 +464,8 @@ export function MarketBuyPage() {
                     " — " +
                     a.detailAddress +
                     ", " +
+                    a.ward +
+                    ", " +
                     a.province,
                 })),
               },
@@ -778,7 +782,7 @@ export function SellerProfilePage() {
                 ? "Chưa có dữ liệu"
                 : p.reputation.cancellationRate + "%"}
             </p>
-            <p>Tham gia {new Date(p.joinedAt).toLocaleDateString("vi-VN")}</p>
+            <p>Tham gia {formatDate(p.joinedAt)}</p>
           </section>
         )}
       </State>
@@ -835,7 +839,7 @@ function ValuationPanel({ listingId }) {
     <State query={q}>{q.data?.map(v=><article className="panel" key={v.valuationId}>
       <strong>Giá ước tính: {money(v.estimatedPrice)}</strong>
       <p>Khoảng gợi ý: {money(v.suggestedMinPrice)} – {money(v.suggestedMaxPrice)}</p>
-      <p>Giá tham chiếu: {money(v.referencePrice)} · {v.createdAt}</p>
+      <p>Giá tham chiếu: {money(v.referencePrice)} · {formatDate(v.createdAt)}</p>
       <details><summary>Chi tiết tính giá</summary><p>Tuổi: {v.ageFactor} · Tình trạng: {v.conditionFactor} · Bảo hành: {v.warrantyFactor} · Phụ kiện: {v.accessoryFactor} · Sửa chữa: {v.repairFactor} · Nhu cầu: {v.demandFactor}</p><p>{v.note}</p></details>
     </article>)}</State>
   </section>;

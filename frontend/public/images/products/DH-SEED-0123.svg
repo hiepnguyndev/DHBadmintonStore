@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#FCECEE"/></linearGradient></defs>
+    <rect width="800" height="1000" fill="url(#bg)"/><rect x="34" y="34" width="732" height="930" rx="38" fill="#ffffff" fill-opacity=".46" stroke="#FFE4E6" stroke-width="3"/>
+    <text x="60" y="94" font-size="25" font-weight="800" fill="#BE123C" font-family="DejaVu Sans, Arial,sans-serif">DH BADMINTON STORE</text>
+    <rect x="60" y="129" rx="16" width="268" height="44" fill="#FFE4E6"/><text x="78" y="159" font-size="19" font-weight="700" fill="#BE123C" font-family="DejaVu Sans,Arial,sans-serif">QUẤN CÁN</text>
+    <g transform="rotate(-25 400 400)"><rect x="310" y="236" width="180" height="364" rx="52" fill="#BE123C" fill-opacity=".14" stroke="#BE123C" stroke-width="16"/><path d="M324 283H479 M324 316H479 M324 348H479 M324 380H479 M324 412H479 M324 444H479 M324 476H479 M324 508H479" stroke="#BE123C" stroke-width="7" stroke-opacity=".45"/></g><rect x="50" y="709" width="700" height="4" rx="2" fill="#FFE4E6"/>
+    <text x="60" y="750" font-size="23" font-weight="800" fill="#BE123C" font-family="DejaVu Sans,Arial,sans-serif">YONEX • DH-SEED-0123</text>
+    <g font-family="DejaVu Sans, Arial,sans-serif"><text x="60" y="790" font-size="33" font-weight="700" fill="#172238">ULTRA THIN GRAP (3 WRAPS)</text></g>
+    <rect x="60" y="901" width="680" height="35" rx="9" fill="#FCE7E7"/><text x="400" y="926" text-anchor="middle" font-size="17" font-weight="750" fill="#A51D1D" font-family="DejaVu Sans,Arial,sans-serif">HÌNH MINH HỌA - KHÔNG PHẢI ẢNH SẢN PHẨM</text>
+    </svg>

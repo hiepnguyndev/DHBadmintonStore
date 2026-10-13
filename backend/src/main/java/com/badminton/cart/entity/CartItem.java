@@ -1,6 +1,7 @@
 package com.badminton.cart.entity;
 
 import com.badminton.product.entity.Product;
+import com.badminton.product.entity.ProductVariant;
 import jakarta.persistence.*;
 import java.time.*;
 
@@ -19,6 +20,10 @@ public class CartItem extends com.badminton.common.entity.BaseEntity {
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "product_id", nullable = false)
   private Product product;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "variant_id")
+  private ProductVariant variant;
 
   @Column(name = "quantity", nullable = false)
   private Integer quantity;
@@ -50,6 +55,9 @@ public class CartItem extends com.badminton.common.entity.BaseEntity {
   public Integer getQuantity() {
     return quantity;
   }
+
+  public ProductVariant getVariant() { return variant; }
+  public void setVariant(ProductVariant value) { variant = value; }
 
   public void setQuantity(Integer value) {
     quantity = value;

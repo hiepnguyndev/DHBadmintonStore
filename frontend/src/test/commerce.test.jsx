@@ -14,6 +14,7 @@ import {
 import { SellerProfilePage } from "../pages/MarketplacePages";
 import { Form } from "../components/CommerceUI";
 import { apiClient } from "../services/apiClient";
+import { ChatbotProvider } from "../context/ChatbotContext";
 vi.mock("../services/apiClient", () => ({
   apiClient: vi.fn(),
   errorMessage: (e) => e.response?.data?.message || "Mất kết nối",
@@ -23,7 +24,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 function view(node) {
-  return render(<MemoryRouter>{node}</MemoryRouter>);
+  return render(<MemoryRouter><ChatbotProvider>{node}</ChatbotProvider></MemoryRouter>);
 }
 it("shows the server match score and reasons without deriving a frontend score", async () => {
   apiClient.mockResolvedValue({
@@ -134,4 +135,17 @@ it("prevents double submit while waiting and displays the server error", async (
     "Dữ liệu chưa hợp lệ",
   );
   expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled();
+});
+it("binary switches preserve the API's true/false string values", async () => {
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
+  view(<Form fields={[{ name: "modelVerified", label: "Model đúng", options: [{ value: "false", label: "Không" }, { value: "true", label: "Có" }] }]} initial={{ modelVerified: "false" }} onSubmit={onSubmit} />);
+  const toggle = screen.getByRole("switch");
+  expect(toggle).not.toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+  await waitFor(() => expect(onSubmit).toHaveBeenLastCalledWith({ modelVerified: "false" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled());
+  fireEvent.click(toggle);
+  expect(toggle).toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+  await waitFor(() => expect(onSubmit).toHaveBeenLastCalledWith({ modelVerified: "true" }));
 });

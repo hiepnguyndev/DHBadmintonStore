@@ -2,6 +2,8 @@ package com.badminton.user.entity;
 
 import com.badminton.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +28,18 @@ public class User extends BaseEntity {
   @Column(name = "avatar_url", length = 500)
   private String avatarUrl;
 
+  @Column(name = "date_of_birth")
+  private LocalDate dateOfBirth;
+
+  @Column(length = 12)
+  private String gender;
+
+  @Column(name = "height_cm")
+  private Integer heightCm;
+
+  @Column(name = "weight_kg", precision = 5, scale = 2)
+  private BigDecimal weightKg;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 30)
   private Role role;
@@ -47,10 +61,14 @@ public class User extends BaseEntity {
     return u;
   }
 
-  public void updateProfile(String name, String phone, String avatarUrl) {
+  public void updateProfile(String name, String phone, String avatarUrl, LocalDate dateOfBirth, String gender, Integer heightCm, BigDecimal weightKg) {
     this.fullName = name;
     this.phone = phone;
     this.avatarUrl = avatarUrl;
+    this.dateOfBirth = dateOfBirth;
+    this.gender = gender;
+    this.heightCm = heightCm;
+    this.weightKg = weightKg;
   }
 
   public void changePassword(String hash) {
@@ -84,6 +102,11 @@ public class User extends BaseEntity {
   public String getAvatarUrl() {
     return avatarUrl;
   }
+
+  public LocalDate getDateOfBirth() { return dateOfBirth; }
+  public String getGender() { return gender; }
+  public Integer getHeightCm() { return heightCm; }
+  public BigDecimal getWeightKg() { return weightKg; }
 
   public Role getRole() {
     return role;

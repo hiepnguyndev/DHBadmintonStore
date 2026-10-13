@@ -28,7 +28,7 @@ class AddressServiceTest {
   }
 
   AddressRequest request() {
-    return new AddressRequest("Name", "0901234567", "HN", "HD", "ML", "123 ABC", true);
+    return new AddressRequest("Name", "0901234567", "HN", "ML", "123 ABC", true);
   }
 
   @Test
@@ -62,6 +62,8 @@ class AddressServiceTest {
     InOrder order = inOrder(users, addresses);
     order.verify(users).findByIdForUpdate(1L);
     order.verify(addresses).findAllByUserUserIdOrderByAddressIdDesc(1L);
-    order.verify(addresses).saveAndFlush(any());
+    ArgumentCaptor<Address> saved = ArgumentCaptor.forClass(Address.class);
+    order.verify(addresses).saveAndFlush(saved.capture());
+    assertThat(saved.getValue().getDistrict()).isEmpty();
   }
 }

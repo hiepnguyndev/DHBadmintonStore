@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#EBF2FE"/></linearGradient></defs>
+    <rect width="800" height="1000" fill="url(#bg)"/><rect x="34" y="34" width="732" height="930" rx="38" fill="#ffffff" fill-opacity=".46" stroke="#DBEAFE" stroke-width="3"/>
+    <text x="60" y="94" font-size="25" font-weight="800" fill="#1E40AF" font-family="DejaVu Sans, Arial,sans-serif">DH BADMINTON STORE</text>
+    <rect x="60" y="129" rx="16" width="268" height="44" fill="#DBEAFE"/><text x="78" y="159" font-size="19" font-weight="700" fill="#1E40AF" font-family="DejaVu Sans,Arial,sans-serif">VỢT CẦU LÔNG</text>
+    <g stroke="#1E40AF" stroke-width="13" fill="none" stroke-linecap="round"><ellipse cx="390" cy="280" rx="106" ry="146" transform="rotate(-25 390 280)"/><path d="M433 408 L534 622"/><path d="M547 610 L569 664" stroke-width="26" /></g><g stroke="#1E40AF" stroke-opacity=".43" stroke-width="4"><path d="M306 212L489 378 M292 257L475 423 M315 179L503 344 M350 149L518 312"/><path d="M325 399 L475 203 M288 365 L444 170 M270 321 L402 138 M359 417 L497 244"/></g><rect x="50" y="709" width="700" height="4" rx="2" fill="#DBEAFE"/>
+    <text x="60" y="750" font-size="23" font-weight="800" fill="#1E40AF" font-family="DejaVu Sans,Arial,sans-serif">YONEX • DH-SEED-0028</text>
+    <g font-family="DejaVu Sans, Arial,sans-serif"><text x="60" y="790" font-size="33" font-weight="700" fill="#172238">ARCSABER 7 PRO</text></g>
+    <rect x="60" y="901" width="680" height="35" rx="9" fill="#FCE7E7"/><text x="400" y="926" text-anchor="middle" font-size="17" font-weight="750" fill="#A51D1D" font-family="DejaVu Sans,Arial,sans-serif">HÌNH MINH HỌA - KHÔNG PHẢI ẢNH SẢN PHẨM</text>
+    </svg>

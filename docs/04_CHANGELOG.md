@@ -3877,3 +3877,103 @@ Status cũ nullable chưa có tập giá trị. Chốt ACTIVE/INACTIVE; tạo AC
 Mở POST /api/market-orders/{id}/cancel cho Buyer sở hữu, chỉ PENDING_PAYMENT + WAITING_PAYMENT; backend gán BUYER/BUYER_CHANGED_MIND. Mở GET /api/admin/audit-logs?page=0&size=20 chỉ ADMIN, size tối đa 100. Không thay state machine hoặc quyền release/refund. Ảnh hưởng controller/UI/API tests.
 
 Rollback: thay đổi quyết định cần CHANGE mới; không tự phục hồi quy tắc cũ. Cập nhật Implementation Status theo kết quả kiểm thử, không tự đánh dấu toàn bộ DONE.
+
+## CHG-018 — ChatbotAI góc màn hình (2026-10-13)
+
+Người dùng yêu cầu: “Tích hợp chatbot và chuyển về góc màn hình”. Phạm vi
+được yêu cầu là chatbot tư vấn cục bộ của MVP, dùng danh mục thật thay cho
+DEMO; không đổi mô hình xác thực, CSDL, Match Score hoặc nghiệp vụ mua hàng.
+
+Thêm POST /api/ai/chat công khai, validation/history giới hạn và rate limit;
+không lưu phiên server hoặc ghi CSDL. ChatbotAI mở qua nút nổi góc dưới phải
+và các nút tư vấn dùng chung. Gỡ tên DH Match khỏi giao diện; giữ trang gợi ý
+theo hồ sơ riêng. Đây là engine quy tắc LOCAL_RULES, không phải LLM được huấn luyện.
+
+Hợp đồng API, giới hạn xử lý, bảo mật và kiểm thử: [CHATBOT_INTEGRATION.md](CHATBOT_INTEGRATION.md).
+
+## CHG-019 - DH Chatbot và gợi ý từ hồ sơ (2026-10-13)
+
+Người dùng yêu cầu: "Gợi ý từ hồ sơ tích hợp vào chatbot và đổi tên chatbot
+thành DH Chatbot". Đổi tên toàn bộ điểm hiển thị và tích hợp kết quả cá nhân
+hóa vào khung chat góc màn hình. Các nút gợi ý trên trang chủ, cửa hàng và hồ sơ
+mở cùng khung chat; lưu hồ sơ người chơi mở kết quả trong chat.
+
+Dùng lại GET /api/recommendations?limit=3 với JWT hiện tại, không gửi userId
+hoặc hồ sơ qua API chat công khai. Hiển thị điểm phù hợp, lý do và lưu ý do
+backend trả về; không thay MatchScoreCalculator, quyền USER hay mô hình CSDL.
+Giữ /recommendations cho liên kết cũ. Không xóa dữ liệu/tài khoản; các lần yêu
+cầu gợi ý vẫn ghi recommendation_logs theo nghiệp vụ hiện hữu.
+
+Bổ sung xử lý khách chưa đăng nhập, thiếu hồ sơ, hết phiên, không có hàng,
+không có quyền, lỗi/thử lại và hủy kết quả khi đổi tài khoản.
+Chi tiết và bằng chứng: [CHATBOT_INTEGRATION.md](CHATBOT_INTEGRATION.md).
+
+## CHG-020 - Ưu đãi và Cộng đồng & Tin tức trên trang chủ (2026-10-13)
+
+Người dùng yêu cầu bỏ khối gợi ý theo hồ sơ trên trang chủ, thay bằng sản phẩm
+ưu đãi và thêm Cộng đồng & Tin tức bên dưới. Gỡ khối PLAYER DNA; giữ gợi ý từ
+hồ sơ trong DH Chatbot và các trang tài khoản/cửa hàng.
+
+GET /api/products bổ sung onSale=false mặc định. onSale=true lọc salePrice khác
+NULL và nhỏ hơn price trước khi phân trang, giữ nguyên quyền đọc/trạng thái
+công khai. Trang chủ hiển thị tối đa 4 ưu đãi; /promotions dùng bộ lọc và phân
+trang. ProductCard hiển thị giá gốc và mức giảm thực, không thêm dữ liệu mẫu.
+
+Thêm lối vào Marketplace cùng hai bản tin có nguồn, ngày đăng và liên kết
+Yonex. Đây là nội dung chọn lọc tĩnh, không phải feed tự cập nhật hay CMS.
+Ảnh và nguồn được ghi trong REDESIGN_ASSETS.md. Không thay schema, reset dữ liệu
+hoặc thay tài khoản. Kiểm thử ghi dữ liệu chỉ chạy trên MySQL tách biệt 3307.
+
+## CHG-021 - Admin chọn và đăng ưu đãi (2026-10-13)
+
+Người dùng yêu cầu: "Phần ưu đãi và mức ưu đãi hãy để cho admin chọn và đẩy lên".
+Thêm /admin/promotions với tìm/chọn sản phẩm, nhập mức giảm phần trăm hoặc giá
+bán, xem giá sau giảm, đăng/cập nhật và xác nhận kết thúc ưu đãi.
+
+Migration V10 bổ sung promotion_published mặc định FALSE; không tự đăng các giá
+giảm đã có. GET /api/products?onSale=true chỉ trả sản phẩm được admin đăng và
+có giá giảm hợp lệ, lọc trước phân trang. API quản trị danh sách và PUT/DELETE
+/api/admin/products/{id}/promotion chỉ cho ADMIN. Backend tính giá và khóa sản
+phẩm khi ghi; kết thúc ưu đãi xóa salePrice để khôi phục giá gốc. Không sửa giá
+đã chốt trong đơn hàng. Gỡ cờ đăng khi ngừng kinh doanh hoặc bỏ giá giảm.
+
+Không reset CSDL, thay tài khoản, đăng ưu đãi tự động hoặc thêm dữ liệu mẫu.
+Kiểm thử ghi dữ liệu dùng MySQL tách biệt; V10 được áp dụng trên bản local bằng
+Flyway khi khởi động lại API. Chi tiết: [ADMIN_PROMOTIONS.md](ADMIN_PROMOTIONS.md).
+
+## CHG-022 - Tin shop trong Cộng đồng & Tin tức (2026-10-13)
+
+Người dùng yêu cầu: "Cộng đồng và tin tức có cả của shop đưa lên". Thêm mục
+Quản trị -> Bài viết (/admin/posts) cho ADMIN tạo/sửa bài, ảnh bìa, phân loại
+tin shop/cộng đồng, lưu nháp, đăng và gỡ/lưu trữ có xác nhận.
+
+Migration V11 tạo shop_posts; không reset dữ liệu hay đổi tài khoản. API công
+khai chỉ đọc bài PUBLISHED, không lộ bản nháp/bài lưu trữ qua ID. API quản lý
+chỉ ADMIN, lưu nội dung và ảnh trong cùng giao dịch. Nội dung hiển thị dạng
+văn bản, không chạy HTML/script. Giữ các bài tin ngoài và lối vào Marketplace.
+
+Trang chủ hiển thị tối đa ba bài shop mới nhất cùng nội dung cũ. /news có phân
+loại/phân trang và /news/{id} đọc bài. Không tự đăng hay thêm bài mẫu. Kiểm thử
+ghi CSDL chỉ dùng MySQL riêng. Chi tiết: [SHOP_POSTS.md](SHOP_POSTS.md).
+
+## CHG-023 - Nhập 200 sản phẩm và bộ SQL hoàn chỉnh (2026-10-13)
+
+Nhập bộ JSON ShopVNB người dùng cung cấp vào cấu trúc ứng dụng, tồn kho ban đầu
+20/sản phẩm. 198 sản phẩm có giá được mở bán; 2 sản phẩm chưa có giá giữ INACTIVE.
+Giữ đủ 191 URL ảnh cho 190 sản phẩm và dữ liệu nguồn JSON. Không tự tạo SKU,
+tổ hợp màu-size, lối chơi, trình độ hoặc ưu đãi.
+
+Migration V12 thêm catalog_import_sources với khóa nguồn ổn định và liên kết
+sản phẩm. File 04 nhập trong giao dịch, có khóa nhập, nhận diện để chạy lặp và
+giữ chỉnh sửa của admin. Dùng JSON_TABLE nên tài khoản ứng dụng không cần quyền
+tạo routine hoặc bảng tạm. Công cụ Node sao lưu trước mỗi lần nhập và kiểm tra
+tài khoản/mật khẩu/vai trò, đơn hàng, bài viết shop không thay đổi.
+
+Viết lại 00 chỉ tạo/chọn CSDL; bổ sung 03 cấu trúc V1-V12 và 05 cài mới đầy đủ
+kèm sản phẩm. Bản cấu trúc có checksum Flyway thật, yêu cầu CSDL trống và không
+kèm tài khoản hay mật khẩu. SQL nguồn CSDL/schema.sql không được chạy vào ứng dụng.
+
+Danh sách quản lý sản phẩm dùng API admin để sửa được cả sản phẩm INACTIVE;
+mô tả giữ xuống dòng cho thông số nhập từ nguồn. Bộ kiểm thử SQL chạy MySQL riêng
+3307, kiểm tra rollback, nhập lặp, giữ chỉnh sửa, khôi phục schema/checksum và
+cài mới. Hướng dẫn: [database/README.md](../database/README.md).

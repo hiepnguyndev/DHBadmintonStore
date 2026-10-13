@@ -7,6 +7,8 @@ import { authApi } from "../services/authApi";
 import { errorMessage, applyServerErrors } from "../services/apiClient";
 import { useAuth } from "../context/AuthContext";
 import FormField from "../components/FormField";
+import AuthAside from "../components/AuthAside";
+import { ArrowRight, Mail, Phone } from "../components/icons";
 
 export default function RegisterPage() {
   const { user } = useAuth();
@@ -46,17 +48,7 @@ export default function RegisterPage() {
 
   return (
     <section className="auth-shell">
-      <aside className="auth-aside">
-        <span className="eyebrow">YOUR GAME STARTS HERE</span>
-        <h2>
-          Một tài khoản.
-          <br />
-          Nhiều
-          <br />
-          <em>kết nối.</em>
-        </h2>
-        <p>Bắt đầu hành trình cầu lông của riêng bạn.</p>
-      </aside>
+      <AuthAside registering />
       <div className="auth-form">
         <span className="eyebrow">GIA NHẬP DH</span>
         <h1>Tạo tài khoản</h1>
@@ -88,6 +80,7 @@ export default function RegisterPage() {
               fullWidth
               variant={contactType === "email" ? "contained" : "outlined"}
               aria-pressed={contactType === "email"}
+              startIcon={<Mail size={16} />}
               onClick={() => {
                 setValue("contact", "");
                 setContactType("email");
@@ -100,6 +93,7 @@ export default function RegisterPage() {
               fullWidth
               variant={contactType === "phone" ? "contained" : "outlined"}
               aria-pressed={contactType === "phone"}
+              startIcon={<Phone size={16} />}
               onClick={() => {
                 setValue("contact", "");
                 setContactType("phone");
@@ -167,6 +161,7 @@ export default function RegisterPage() {
             fullWidth
             size="large"
             variant="contained"
+            endIcon={<ArrowRight size={18} />}
             disabled={isSubmitting}
             sx={{ mt: 2 }}
           >

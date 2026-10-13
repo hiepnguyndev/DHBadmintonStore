@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
   public UserResponse toResponse(User u) {
     return new UserResponse(
-        u.getUserId(), u.getFullName(), u.getEmail(), u.getPhone(), u.getAvatarUrl(), u.getRole());
+        u.getUserId(), u.getFullName(), u.getEmail(), u.getPhone(), u.getAvatarUrl(), u.getRole(),
+        u.getDateOfBirth(), u.getGender(), u.getHeightCm(), u.getWeightKg());
   }
 
   public AddressResponse toResponse(Address a) {
@@ -17,7 +18,6 @@ public class UserMapper {
         a.getReceiverName(),
         a.getReceiverPhone(),
         a.getProvince(),
-        a.getDistrict(),
         a.getWard(),
         a.getDetailAddress(),
         a.isDefaultAddress());

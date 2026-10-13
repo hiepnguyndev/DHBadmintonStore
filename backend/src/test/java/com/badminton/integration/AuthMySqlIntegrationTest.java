@@ -65,8 +65,6 @@ class AuthMySqlIntegrationTest {
                 "0901234567",
                 "province",
                 "HN",
-                "district",
-                "HD",
                 "ward",
                 "ML",
                 "detailAddress",
@@ -80,6 +78,8 @@ class AuthMySqlIntegrationTest {
                     .contentType("application/json")
                     .content(payload))
             .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.data.district").doesNotExist())
+            .andExpect(jsonPath("$.data.ward").value("ML"))
             .andReturn()
             .getResponse()
             .getContentAsString();

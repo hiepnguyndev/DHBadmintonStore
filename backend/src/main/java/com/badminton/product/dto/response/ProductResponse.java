@@ -12,6 +12,7 @@ public record ProductResponse(
     BigDecimal price,
     BigDecimal salePrice,
     BigDecimal effectivePrice,
+    boolean promotionPublished,
     Integer stock,
     String thumbnailUrl,
     ProductStatus status,

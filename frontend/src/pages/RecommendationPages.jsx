@@ -1,4 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useChatbot } from "../context/ChatbotContext";
+import { ArrowUpRight, SlidersHorizontal, Sparkles, Target } from "../components/icons";
 import {
   api,
   useData,
@@ -28,22 +30,31 @@ export const playerFields = [
     label: "Lực cổ tay",
     options: ["WEAK", "MEDIUM", "STRONG"],
   },
+  { name: "dominantHand", label: "Tay thuận", options: ["RIGHT", "LEFT"] },
   {
     name: "preferredWeight",
     label: "Trọng lượng ưa thích",
     options: ["2U", "3U", "4U", "5U", "6U"],
   },
+  { name: "balanceType", label: "Điểm cân bằng ưa thích", options: ["HEAD_HEAVY", "EVEN_BALANCE", "HEAD_LIGHT"] },
+  { name: "shaftFlexibility", label: "Độ cứng thân vợt", options: ["FLEXIBLE", "MEDIUM", "STIFF", "EXTRA_STIFF"] },
+  { name: "shirtSize", label: "Size áo", options: ["XS", "S", "M", "L", "XL", "XXL"] },
+  { name: "pantsSize", label: "Size quần", options: ["XS", "S", "M", "L", "XL", "XXL"] },
+  { name: "shoeSize", label: "Size giày EU", options: Array.from({length:14},(_,i)=>({value:String(i+35),label:String(i+35)})) },
+  { name: "favoriteColors", label: "Màu sắc yêu thích", required: false },
+  { name: "favoriteBrands", label: "Thương hiệu yêu thích", required: false },
   { name: "minBudget", label: "Ngân sách từ (₫)", type: "number", min: 0 },
   { name: "maxBudget", label: "Ngân sách đến (₫)", type: "number", min: 0 },
 ];
 export function PlayerProfilePage() {
-  const q = useData("/player-profile"),
-    navigate = useNavigate();
+  const q = useData("/player-profile");
+  const { openChatbot } = useChatbot();
   return (
     <Page
       title="Hồ sơ người chơi"
       subtitle="Cho chúng tôi biết cách bạn chơi và ngân sách để tìm vợt phù hợp."
     >
+      <div className="recommendation-intro"><Target size={28} /><div><h2>Bắt đầu từ lối chơi của bạn</h2><p>Một hồ sơ, những lựa chọn phù hợp với trình độ và thể lực.</p></div></div>
       {q.loading ? (
         <p role="status">Đang tải…</p>
       ) : q.error && q.errorCode !== "PROFILE_REQUIRED" ? (
@@ -57,7 +68,15 @@ export function PlayerProfilePage() {
               playStyle: "BALANCED",
               playType: "BOTH",
               wristStrength: "MEDIUM",
+              dominantHand: "RIGHT",
               preferredWeight: "4U",
+              balanceType: "EVEN_BALANCE",
+              shaftFlexibility: "MEDIUM",
+              shirtSize: "L",
+              pantsSize: "L",
+              shoeSize: "42",
+              favoriteColors: "",
+              favoriteBrands: "",
               minBudget: 500000,
               maxBudget: 2000000,
             }
@@ -70,7 +89,7 @@ export function PlayerProfilePage() {
               Object.fromEntries(playerFields.map((f) => [f.name, v[f.name]])),
             )
           }
-          onDone={() => navigate("/recommendations")}
+          onDone={() => { q.reload(); openChatbot("profile"); }}
         />
       )}
     </Page>
@@ -84,10 +103,11 @@ export function RecommendationsPage() {
       subtitle="Điểm phù hợp tổng hợp trình độ, lối chơi, lực cổ tay, trọng lượng, độ cứng và ngân sách."
       action={
         <Link className="button" to="/player-profile">
-          Điều chỉnh hồ sơ
+          <SlidersHorizontal size={16} />Điều chỉnh hồ sơ
         </Link>
       }
     >
+      <div className="recommendation-intro"><Sparkles size={28} /><div><h2>Gợi ý vợt / Lựa chọn cá nhân hóa</h2><p>Điểm phù hợp đi kèm thông số, lý do lựa chọn và những điểm cần cân nhắc.</p></div></div>
       <State query={q} empty={!q.data?.length}>
         <div className="recommend-grid">
           {q.data?.map((r, index) => (
@@ -145,7 +165,7 @@ export function RecommendationsPage() {
       </State>
       {q.error && (
         <Link className="button primary" to="/player-profile">
-          Tạo hoặc cập nhật hồ sơ người chơi
+          Tạo hoặc cập nhật hồ sơ người chơi<ArrowUpRight size={16} />
         </Link>
       )}
     </Page>

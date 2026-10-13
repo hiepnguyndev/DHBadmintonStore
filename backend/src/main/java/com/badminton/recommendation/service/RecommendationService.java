@@ -73,36 +73,41 @@ public class RecommendationService {
     p.setPreferredWeight(r.preferredWeight());
     p.setMinBudget(r.minBudget());
     p.setMaxBudget(r.maxBudget());
+    p.setDominantHand(r.dominantHand());
+    p.setBalanceType(r.balanceType());
+    p.setShaftFlexibility(r.shaftFlexibility());
+    p.setShirtSize(r.shirtSize());
+    p.setPantsSize(r.pantsSize());
+    p.setShoeSize(r.shoeSize());
+    p.setFavoriteColors(r.favoriteColors());
+    p.setFavoriteBrands(r.favoriteBrands());
     return PlayerProfileMapper.toResponse(profiles.saveAndFlush(p));
   }
 
   public List<RecommendationResult> recommend(int limit) {
     bad(limit >= 1 && limit <= 100, "limit trong 1–100");
     PlayerProfile p = found(profiles.findByUserUserId(access.current().id()), "PROFILE_REQUIRED");
-    var results = new ArrayList<RecommendationResult>();
+    record Scored(Product product, MatchScoreCalculator.Result score) {}
+    var results = new ArrayList<Scored>();
     for (var r : specs.findAll()) {
       var product = r.getProduct();
       if (product.getStatus() != ProductStatus.ACTIVE || product.getStock() <= 0) continue;
       var score = calculator.calculate(p, r, ProductMapper.effectivePrice(product));
-      results.add(
-          new RecommendationResult(
-              product.getProductId(),
-              product.getProductName(),
-              score.matchScore(),
-              score.reasons(),
-              score.cautions(),
-              score.breakdown(),
-              catalog.view(product)));
+      results.add(new Scored(product, score));
     }
-    var top =
-        results.stream()
-            .sorted(
-                Comparator.comparingInt(RecommendationResult::matchScore)
-                    .reversed()
-                    .thenComparing(RecommendationResult::productId))
-            .limit(limit)
-            .toList();
-    for (var r : top) {
+    var top = results.stream()
+        .sorted(Comparator.comparingInt((Scored x) -> x.score().matchScore()).reversed()
+            .thenComparing(x -> x.product().getProductId()))
+        .limit(limit).toList();
+    var productViews = catalog.views(top.stream().map(Scored::product).toList());
+    var response = new ArrayList<RecommendationResult>(top.size());
+    for (int i = 0; i < top.size(); i++) {
+      var x = top.get(i);
+      var score = x.score();
+      response.add(new RecommendationResult(x.product().getProductId(), x.product().getProductName(),
+          score.matchScore(), score.reasons(), score.cautions(), score.breakdown(), productViews.get(i)));
+    }
+    for (var r : response) {
       RecommendationLog log = new RecommendationLog();
       log.setUser(p.getUser());
       log.setProduct(products.getReferenceById(r.productId()));
@@ -114,6 +119,6 @@ public class RecommendationService {
       }
       logs.save(log);
     }
-    return top;
+    return response;
   }
 }

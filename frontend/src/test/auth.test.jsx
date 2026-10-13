@@ -12,12 +12,15 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ProtectedRoute, { AdminRoute } from "../routes/ProtectedRoute";
 import { authApi } from "../services/authApi";
+import { userApi } from "../services/userApi";
 vi.mock("../services/authApi", () => ({
   authApi: { login: vi.fn(), register: vi.fn(), logout: vi.fn() },
 }));
+vi.mock("../services/userApi", () => ({ userApi: { me: vi.fn() } }));
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  localStorage.removeItem("dh-auth-token");
 });
 function view(page) {
   return render(
@@ -27,6 +30,13 @@ function view(page) {
   );
 }
 describe("Auth screens", () => {
+  it("restores a valid stored browser session", async () => {
+    localStorage.setItem("dh-auth-token", "saved-token");
+    userApi.me.mockResolvedValue({ id: 7, fullName: "Saved user", role: "USER" });
+    view(<LoginPage />);
+    await screen.findByText("Saved user").catch(() => {});
+    expect(userApi.me).toHaveBeenCalledOnce();
+  });
   it("requires login before profile", () => {
     render(
       <MemoryRouter initialEntries={["/profile"]}>

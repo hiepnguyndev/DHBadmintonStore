@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
 import { errorMessage, applyServerErrors } from "../services/apiClient";
 import FormField from "../components/FormField";
+import AuthAside from "../components/AuthAside";
+import { ArrowRight } from "../components/icons";
 
 export default function LoginPage() {
   const { user, login, sessionMessage } = useAuth();
@@ -18,10 +20,14 @@ export default function LoginPage() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm();
+  const from = location.state?.from;
+  const destinationFor = (role) => role === "ADMIN" ? "/admin"
+    : typeof from === "string" && from.startsWith("/") && !from.startsWith("//")
+      ? from : "/profile";
   if (user)
     return (
       <Navigate
-        to={user.role === "ADMIN" ? "/admin" : "/profile"}
+        to={destinationFor(user.role)}
         replace
       />
     );
@@ -34,16 +40,7 @@ export default function LoginPage() {
         ? { email: identifier, password: data.password }
         : { phone: identifier, password: data.password };
       const loggedInUser = await login(credentials);
-      const from = location.state?.from;
-      const destination =
-        loggedInUser.role === "ADMIN"
-          ? "/admin"
-          : typeof from === "string" &&
-              from.startsWith("/") &&
-              !from.startsWith("//")
-            ? from
-            : "/profile";
-      navigate(destination, { replace: true });
+      navigate(destinationFor(loggedInUser.role), { replace: true });
     } catch (e) {
       setErrorMessage(errorMessage(e));
       applyServerErrors(e, setError);
@@ -52,17 +49,7 @@ export default function LoginPage() {
 
   return (
     <section className="auth-shell">
-      <aside className="auth-aside">
-        <span className="eyebrow">WELCOME BACK</span>
-        <h2>
-          Trở lại sân.
-          <br />
-          Tiếp tục
-          <br />
-          <em>đam mê.</em>
-        </h2>
-        <p>Mọi thông tin của bạn, ở một nơi.</p>
-      </aside>
+      <AuthAside />
       <div className="auth-form">
         <span className="eyebrow">TÀI KHOẢN DH</span>
         <h1>Đăng nhập</h1>
@@ -103,6 +90,7 @@ export default function LoginPage() {
             fullWidth
             size="large"
             variant="contained"
+            endIcon={<ArrowRight size={18} />}
             disabled={isSubmitting}
             sx={{ mt: 2 }}
           >

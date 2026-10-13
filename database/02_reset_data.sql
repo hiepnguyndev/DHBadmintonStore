@@ -1,0 +1,36 @@
+-- Explicit local reset: remove every application record and reset identifiers.
+-- Flyway history is retained so versioned schema migrations remain valid.
+USE badminton_ecommerce;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE addresses;
+TRUNCATE TABLE audit_logs;
+TRUNCATE TABLE brands;
+TRUNCATE TABLE cart_items;
+TRUNCATE TABLE carts;
+TRUNCATE TABLE categories;
+TRUNCATE TABLE dispute_evidences;
+TRUNCATE TABLE disputes;
+TRUNCATE TABLE escrow_transactions;
+TRUNCATE TABLE favorites;
+TRUNCATE TABLE inspection_reports;
+TRUNCATE TABLE inspection_requests;
+TRUNCATE TABLE marketplace_orders;
+TRUNCATE TABLE notifications;
+TRUNCATE TABLE order_items;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE player_profiles;
+TRUNCATE TABLE product_images;
+TRUNCATE TABLE product_variants;
+TRUNCATE TABLE products;
+TRUNCATE TABLE racket_specifications;
+TRUNCATE TABLE recommendation_logs;
+TRUNCATE TABLE recommendation_weights;
+TRUNCATE TABLE reviews;
+TRUNCATE TABLE seller_ratings;
+TRUNCATE TABLE shipments;
+TRUNCATE TABLE used_listing_images;
+TRUNCATE TABLE used_listings;
+TRUNCATE TABLE used_racket_specifications;
+TRUNCATE TABLE users;
+TRUNCATE TABLE valuations;
+SET FOREIGN_KEY_CHECKS = 1;

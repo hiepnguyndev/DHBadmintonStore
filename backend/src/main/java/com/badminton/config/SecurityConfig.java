@@ -38,14 +38,20 @@ public class SecurityConfig {
                 a.requestMatchers(
                     HttpMethod.POST,
                     "/api/auth/register",
-                    "/api/auth/login")
+                    "/api/auth/login",
+                    "/api/ai/chat")
                     .permitAll()
                     .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/payments/methods", "/api/payments/callbacks/vnpay").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/payments/callbacks/momo", "/api/payments/callbacks/zalopay", "/api/payments/callbacks/sepay").permitAll()
                     .requestMatchers(
                         HttpMethod.GET,
                         "/api/products",
+                        "/api/posts",
+                        "/api/posts/*",
                         "/api/products/*",
+                        "/api/products/*/variants",
                         "/api/products/*/reviews",
                         "/api/categories",
                         "/api/brands",

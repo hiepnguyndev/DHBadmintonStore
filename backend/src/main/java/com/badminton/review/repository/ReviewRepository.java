@@ -13,4 +13,6 @@ public interface ReviewRepository
   Optional<Review> lock(@Param("id") Long id);
 
   boolean existsByUserUserIdAndOrderItemOrderItemId(Long userId, Long itemId);
+
+  void deleteByOrderItemOrderOrderIdIn(Collection<Long> orderIds);
 }

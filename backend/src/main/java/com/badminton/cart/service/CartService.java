@@ -9,6 +9,7 @@ import com.badminton.cart.entity.*;
 import com.badminton.cart.repository.*;
 import com.badminton.common.support.*;
 import com.badminton.product.entity.*;
+import com.badminton.product.dto.response.ProductVariantResponse;
 import com.badminton.product.mapper.ProductMapper;
 import com.badminton.product.repository.ProductRepository;
 import com.badminton.product.service.ProductService;
@@ -24,6 +25,7 @@ public class CartService {
   private final CartRepository carts;
   private final CartItemRepository items;
   private final ProductRepository products;
+  private final com.badminton.product.repository.ProductVariantRepository variants;
   private final ProductService catalog;
   private final Access access;
 
@@ -31,11 +33,13 @@ public class CartService {
       CartRepository carts,
       CartItemRepository items,
       ProductRepository products,
+      com.badminton.product.repository.ProductVariantRepository variants,
       ProductService catalog,
       Access access) {
     this.carts = carts;
     this.items = items;
     this.products = products;
+    this.variants = variants;
     this.catalog = catalog;
     this.access = access;
   }
@@ -61,6 +65,7 @@ public class CartService {
                     new CartView.Item(
                         i.getCartItemId(),
                         catalog.view(i.getProduct()),
+                        i.getVariant()==null?null:new ProductVariantResponse(i.getVariant().getVariantId(),i.getProduct().getProductId(),i.getVariant().getSku(),i.getVariant().getColor(),i.getVariant().getSize(),i.getVariant().getStock(),i.getVariant().getStatus()),
                         i.getQuantity(),
                         ProductMapper.effectivePrice(i.getProduct()),
                         ProductMapper.effectivePrice(i.getProduct())
@@ -75,17 +80,17 @@ public class CartService {
   public CartView add(CartItemRequest r) {
     Cart c = mine();
     Product p = found(products.findById(r.productId()), "PRODUCT_NOT_FOUND");
-    CartItem i =
-        items
-            .findByCartCartIdAndProductProductId(c.getCartId(), p.getProductId())
-            .orElseGet(CartItem::new);
+    ProductVariant v = r.variantId()==null?null:found(variants.findByVariantIdAndProductProductId(r.variantId(),p.getProductId()),"VARIANT_NOT_FOUND");
+    require(variants.existsByProductProductId(p.getProductId()) == (v!=null),"VARIANT_REQUIRED","Chọn biến thể sản phẩm");
+    CartItem i = (v==null?items.findByCartCartIdAndProductProductIdAndVariantIsNull(c.getCartId(),p.getProductId()):items.findByCartCartIdAndVariantVariantId(c.getCartId(),v.getVariantId())).orElseGet(CartItem::new);
     int total = (i.getQuantity() == null ? 0 : i.getQuantity()) + r.quantity();
     require(
-        p.getStatus() == ProductStatus.ACTIVE && p.getStock() >= total,
+        p.getStatus() == ProductStatus.ACTIVE && (v==null?p.getStock():v.getStock()) >= total && (v==null||"ACTIVE".equals(v.getStatus())),
         "PRODUCT_OUT_OF_STOCK",
         "Sản phẩm không đủ số lượng");
     i.setCart(c);
     i.setProduct(p);
+    i.setVariant(v);
     i.setQuantity(total);
     items.saveAndFlush(i);
     return get();
@@ -97,7 +102,7 @@ public class CartService {
     access.owner(i.getCart().getUser().getUserId());
     require(
         i.getProduct().getStatus() == ProductStatus.ACTIVE
-            && i.getProduct().getStock() >= r.quantity(),
+            && (i.getVariant()==null?i.getProduct().getStock():i.getVariant().getStock()) >= r.quantity(),
         "PRODUCT_OUT_OF_STOCK",
         "Sản phẩm không đủ số lượng");
     i.setQuantity(r.quantity());

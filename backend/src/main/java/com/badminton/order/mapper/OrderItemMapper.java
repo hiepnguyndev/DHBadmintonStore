@@ -13,6 +13,10 @@ public final class OrderItemMapper {
         e.getProduct() == null ? null : e.getProduct().getProductId(),
         e.getProductName(),
         e.getProductImage(),
+        e.getVariant()==null?null:e.getVariant().getVariantId(),
+        e.getVariantSku(),
+        e.getVariantColor(),
+        e.getVariantSize(),
         e.getQuantity(),
         e.getUnitPrice(),
         e.getTotalPrice());

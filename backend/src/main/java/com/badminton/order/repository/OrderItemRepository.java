@@ -13,4 +13,6 @@ public interface OrderItemRepository
   Optional<OrderItem> lock(@Param("id") Long id);
 
   List<OrderItem> findByOrderOrderIdOrderByProductProductIdAsc(Long id);
+
+  void deleteByOrderOrderIdIn(Collection<Long> orderIds);
 }

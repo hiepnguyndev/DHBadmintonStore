@@ -13,4 +13,6 @@ public interface ProductImageRepository
   Optional<ProductImage> lock(@Param("id") Long id);
 
   List<ProductImage> findByProductProductIdOrderBySortOrderAsc(Long id);
+
+  List<ProductImage> findByProductProductIdInOrderBySortOrderAsc(Collection<Long> ids);
 }

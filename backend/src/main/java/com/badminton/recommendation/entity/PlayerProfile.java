@@ -46,6 +46,15 @@ public class PlayerProfile extends com.badminton.common.entity.BaseEntity {
   @Column(name = "max_budget", nullable = false, precision = 15, scale = 2)
   private BigDecimal maxBudget;
 
+  @Column(name = "dominant_hand", length = 10) private String dominantHand;
+  @Column(name = "balance_type", length = 20) private String balanceType;
+  @Column(name = "shaft_flexibility", length = 20) private String shaftFlexibility;
+  @Column(name = "shirt_size", length = 12) private String shirtSize;
+  @Column(name = "pants_size", length = 12) private String pantsSize;
+  @Column(name = "shoe_size", length = 12) private String shoeSize;
+  @Column(name = "favorite_colors", length = 255) private String favoriteColors;
+  @Column(name = "favorite_brands", length = 255) private String favoriteBrands;
+
   public Long getProfileId() {
     return profileId;
   }
@@ -117,4 +126,21 @@ public class PlayerProfile extends com.badminton.common.entity.BaseEntity {
   public void setMaxBudget(BigDecimal value) {
     maxBudget = value;
   }
+
+  public String getDominantHand() { return dominantHand; }
+  public void setDominantHand(String value) { dominantHand = value; }
+  public String getBalanceType() { return balanceType; }
+  public void setBalanceType(String value) { balanceType = value; }
+  public String getShaftFlexibility() { return shaftFlexibility; }
+  public void setShaftFlexibility(String value) { shaftFlexibility = value; }
+  public String getShirtSize() { return shirtSize; }
+  public void setShirtSize(String value) { shirtSize = value; }
+  public String getPantsSize() { return pantsSize; }
+  public void setPantsSize(String value) { pantsSize = value; }
+  public String getShoeSize() { return shoeSize; }
+  public void setShoeSize(String value) { shoeSize = value; }
+  public String getFavoriteColors() { return favoriteColors; }
+  public void setFavoriteColors(String value) { favoriteColors = value; }
+  public String getFavoriteBrands() { return favoriteBrands; }
+  public void setFavoriteBrands(String value) { favoriteBrands = value; }
 }

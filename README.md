@@ -10,9 +10,9 @@ Bộ source chứa toàn bộ phần đã triển khai, không chỉ Auth. **Đ�
 
 | Thư mục | Nội dung |
 |---|---|
-| backend | Source Java, Maven, cấu hình, Flyway V1–V6, unit/API/MySQL tests |
-| frontend | React, routes người dùng/kiểm định/quản trị, CSS, component tests, Playwright test |
-| database | Tạo database và dữ liệu danh mục mẫu local |
+| backend | Source Java, Maven, cấu hình, Flyway V1–V8, unit/API/MySQL tests |
+| frontend | React, routes người dùng/kiểm định/quản trị, CSS, tests; `public/images/products` chứa ảnh fallback catalog |
+| database | Khởi tạo DB, seeds và dữ liệu import được phân nhóm; xem `database/README.md` |
 | scripts | Chạy bằng Bash/Git Bash hoặc PowerShell |
 | tests | Postman collection Auth và danh mục API thực tế |
 | docs | Năm tài liệu nguồn, trạng thái, quyết định đã phê duyệt, bàn giao và bằng chứng kiểm thử |
@@ -89,6 +89,8 @@ Lần đầu Maven cần Internet để tải dependencies. Flyway tạo bảng,
 
 Sau khi backend khởi động thành công, chạy `database/01_demo_catalog.sql` trong Workbench. Script tạo 3 vợt **giả lập** với ba nhóm thông số để thử gợi ý; chạy lại không tạo bản sao. Không có tài khoản/mật khẩu mặc định và không có hình ảnh giả mạo sản phẩm thật.
 
+Ảnh cho catalog 150 sản phẩm được tổ chức trong `database/seeds/product-images` và `database/imports/product-images`; 150 SVG fallback được phục vụ từ `frontend/public/images/products`. Sau khi seed catalog, có thể chạy `database/seeds/product-images/seed_150_anh_mysql.sql`. Script chỉ điền thumbnail còn trống và thêm ảnh chính nếu sản phẩm chưa có ảnh chính. Xem `database/README.md` về cấu trúc, thứ tự import và giới hạn của ảnh tham khảo.
+
 Bạn đăng ký tài khoản USER trên giao diện. Để thử ADMIN và INSPECTOR, đăng ký thêm hai tài khoản riêng. Trong Workbench trên database local, thay email bằng tài khoản của bạn rồi chạy:
 
 ```sql
@@ -118,6 +120,24 @@ bash scripts/start-frontend.sh
 Script tự chạy `npm ci` khi chưa có node_modules. Mở **http://localhost:5173**.
 
 Nếu dùng `127.0.0.1` thay `localhost`, cập nhật CORS_ALLOWED_ORIGINS trong backend/.env cho đúng origin rồi khởi động lại backend.
+
+### Chạy nhanh local
+
+Sau khi đã cấu hình `backend/.env`, cài JDK 17, Maven 3.9+, Node.js 22 và bật MySQL, từ PowerShell tại thư mục này chạy:
+
+```powershell
+.\start-web.ps1
+```
+
+Script mở backend và frontend ở hai cửa sổ, đợi frontend sẵn sàng rồi mở `http://localhost:5173`. Lần đầu có thể cần thời gian để Maven/npm tải dependencies. Cách này chạy đầy đủ tính năng; GitHub Pages chỉ chạy phần giao diện.
+
+## PHẦN 6A. Deploy giao diện lên GitHub Pages
+
+Workflow `.github/workflows/deploy-pages.yml` build và deploy frontend tự động khi push lên nhánh `main`. Trong GitHub, mở **Settings → Pages**, chọn **GitHub Actions** làm Build and deployment source. Với repo `DHBadmintonStore`, website có URL dạng `https://hiepnguyndev.github.io/DHBadmintonStore/`.
+
+Để frontend gọi được API từ GitHub Pages, cần deploy backend và MySQL ở một host khác. Thêm repository variable `VITE_API_BASE_URL` trong **Settings → Secrets and variables → Actions → Variables**, đặt giá trị là URL API đầy đủ, ví dụ `https://api.ten-mien-cua-ban/api`, rồi push lại để build. Backend cần cho phép origin Pages trong `CORS_ALLOWED_ORIGINS`. Nếu chưa cấu hình API, trang giao diện vẫn mở nhưng các chức năng cần dữ liệu/đăng nhập sẽ không hoạt động.
+
+Để dùng custom domain trên GitHub Pages, cấu hình domain tại **Settings → Pages** và DNS theo hướng dẫn GitHub. Nếu deploy dưới custom domain ở root, đặt repository variable `VITE_BASE_PATH` là `/` trước khi build; đường dẫn mặc định `/DHBadmintonStore/` dành cho URL project Pages ở trên. GitHub Pages không chạy Spring Boot, không lưu ảnh upload bền vững và không host MySQL.
 
 ## PHẦN 7. Luồng chạy thử
 
@@ -203,3 +223,7 @@ Chưa có Cloudinary/Object Storage production, domain/HTTPS hoặc triển khai
 | Schema validation/Flyway checksum | Không sửa migration đã áp dụng; dùng database local sạch cho bản source này hoặc lập migration nâng cấp có kiểm soát |
 
 Không gộp Product với UsedListing hoặc Shop Order với MarketplaceOrder. Đọc năm tài liệu nguồn trước khi phát triển tiếp và cập nhật Implementation Status sau mỗi milestone.
+
+## Thanh toán shop
+
+COD, chuyển khoản ngân hàng, VietQR, VNPAY, MoMo và ZaloPay: xem [cấu hình và quy trình đối soát](docs/PAYMENTS.md). Mặc định chỉ COD được bật; các phương thức khác cần tài khoản nhận tiền hoặc khóa merchant trong `backend/.env`. Flyway V13 nâng cấp CSDL hiện tại mà không xóa dữ liệu. Chưa xác thực giao dịch thật với nhà cung cấp.

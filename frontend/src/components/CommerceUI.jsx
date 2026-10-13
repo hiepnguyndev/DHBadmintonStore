@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, ArrowRight, CircleAlert, Inbox, LoaderCircle, Package, RotateCw, Save, Sparkles, UploadCloud } from "./icons";
 import { apiClient, errorMessage } from "../services/apiClient";
 export async function api(path, method = "get", data) {
   return (await apiClient({ url: path, method, data })).data.data;
@@ -8,11 +9,37 @@ export const money = (v) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
     v ?? 0,
   );
+export const formatDate = (value) => {
+  if (!value) return "";
+  const iso = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }).format(date);
+};
+const parseDate = (value) => {
+  const match = String(value).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return "";
+  const [, day, month, year] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return date.getUTCFullYear() === Number(year) && date.getUTCMonth() === Number(month) - 1 && date.getUTCDate() === Number(day)
+    ? `${year}-${month}-${day}` : "";
+};
+export function DateInput({ name, value, onChange, required = true, ...rest }) {
+  const [text, setText] = useState(() => formatDate(value));
+  useEffect(() => { setText(formatDate(value)); }, [value]);
+  return <input name={name} type="text" inputMode="numeric" placeholder="dd/mm/yyyy" pattern="\d{2}/\d{2}/\d{4}" value={text} required={required}
+    onChange={(event) => {
+      const next = event.target.value;
+      setText(next);
+      const iso = parseDate(next);
+      if (iso || next === "") onChange({ target: { name, value: iso } });
+    }} {...rest} />;
+}
 export const media = (url) =>
   !url
     ? ""
     : url.startsWith("/media/")
-      ? new URL(url, apiClient.defaults.baseURL).href
+      ? new URL(url, new URL(apiClient.defaults.baseURL, window.location.origin)).href
       : url;
 export function useData(path) {
   const [data, setData] = useState(null),
@@ -51,21 +78,19 @@ export function useData(path) {
     reload: () => setVersion((v) => v + 1),
   };
 }
-export function State({ query, children, empty = false }) {
+export function State({ query, children, empty = false, emptyTitle = "Chưa có dữ liệu", emptyMessage = "Nội dung sẽ xuất hiện tại đây khi có cập nhật mới." }) {
   if (query.loading)
     return (
-      <p role="status" className="empty">
-        Đang tải…
-      </p>
+      <div role="status" className="loading-state"><LoaderCircle className="spin" size={24} /><span>Đang tải…</span></div>
     );
   if (query.error)
     return (
-      <div role="alert" className="notice error">
-        {query.error}
-        <button onClick={query.reload}>Thử lại</button>
+      <div role="alert" className="notice error query-error">
+        <CircleAlert size={20} /><span>{query.error}</span>
+        <button onClick={query.reload}><RotateCw size={15} />Thử lại</button>
       </div>
     );
-  if (empty) return <p className="empty">Chưa có dữ liệu.</p>;
+  if (empty) return <div className="empty-state"><span className="empty-symbol"><Inbox size={28} /></span><h2>{emptyTitle}</h2><p>{emptyMessage}</p></div>;
   return children;
 }
 export function Page({ title, subtitle, children, action }) {
@@ -73,7 +98,7 @@ export function Page({ title, subtitle, children, action }) {
     <div className="page-container commerce">
       <div className="page-title">
         <div>
-          <p className="eyebrow">DH BADMINTON STORE</p>
+          <p className="eyebrow"><span className="eyebrow-dot" /> DH BADMINTON / WORKSPACE</p>
           <h1>{title}</h1>
           {subtitle && <p className="muted">{subtitle}</p>}
         </div>
@@ -83,14 +108,15 @@ export function Page({ title, subtitle, children, action }) {
     </div>
   );
 }
-export function Action({ children, onClick, onDone, danger = false }) {
+export function Action({ children, onClick, onDone, danger = false, disabled = false, ...buttonProps }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   return (
     <span className="action">
       <button
         className={danger ? "danger" : ""}
-        disabled={busy}
+        {...buttonProps}
+        disabled={busy || disabled}
         onClick={async () => {
           setBusy(true);
           setError("");
@@ -124,6 +150,8 @@ export function Field({
   required = true,
   ...rest
 }) {
+  const binary = options?.length === 2 && options.every(option => typeof option === "object" && ["true", "false"].includes(option.value));
+  if (binary) return <label className="field field-toggle"><span>{label}</span><span className="toggle-control"><input type="checkbox" role="switch" name={name} checked={value === true || value === "true"} onChange={event => onChange({ target: { name, value: event.target.checked ? "true" : "false" } })} {...rest} /><span className="toggle-track" aria-hidden="true" /><span className="toggle-value">{value === true || value === "true" ? "Có" : "Không"}</span></span></label>;
   return (
     <label className="field">
       <span>{label}</span>
@@ -155,6 +183,8 @@ export function Field({
           required={required}
           {...rest}
         />
+      ) : type === "date" ? (
+        <DateInput name={name} value={value} onChange={onChange} required={required} {...rest} />
       ) : (
         <input
           name={name}
@@ -229,7 +259,7 @@ export function Form({
         </p>
       )}
       <button className="primary" disabled={busy}>
-        {busy ? "Đang xử lý…" : submit}
+        {busy ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}{busy ? "Đang xử lý…" : submit}
       </button>
     </form>
   );
@@ -256,7 +286,7 @@ export function Upload({ path, onDone, extra = {} }) {
           }}
           onDone={onDone}
         >
-          Tải ảnh lên
+          <UploadCloud size={16} />Tải ảnh lên
         </Action>
       )}
     </div>
@@ -274,6 +304,8 @@ export const labels = {
   DELIVERED: "Đã giao hàng",
   DISPUTED: "Đang tranh chấp",
   REFUNDED: "Đã hoàn tiền",
+  REFUND_PENDING: "Chờ hoàn tiền",
+  FAILED: "Thanh toán thất bại",
   DRAFT: "Bản nháp",
   PENDING_REVIEW: "Chờ duyệt",
   AVAILABLE: "Đang bán",
@@ -314,16 +346,18 @@ export const labels = {
   RESOLVED: "Đã giải quyết",
   PAID: "Đã thanh toán",
   UNPAID: "Chưa thanh toán",
+  RIGHT: "Tay phải",
+  LEFT: "Tay trái",
 };
 export const labelOf = (v) => labels[v] || v;
 export function Badge({ value }) {
-  return <span className="badge">{labelOf(value)}</span>;
+  return <span className={`badge badge-${String(value || "").toLowerCase()}`}>{labelOf(value)}</span>;
 }
 export function Pager({ query, page, setPage }) {
   return query.data?.totalPages > 1 ? (
     <div className="pager">
       <button disabled={page === 0} onClick={() => setPage(page - 1)}>
-        Trước
+        <ArrowLeft size={16} />Trước
       </button>
       <span>
         Trang {page + 1} / {query.data.totalPages}
@@ -332,12 +366,15 @@ export function Pager({ query, page, setPage }) {
         disabled={page + 1 >= query.data.totalPages}
         onClick={() => setPage(page + 1)}
       >
-        Sau
+        Sau<ArrowRight size={16} />
       </button>
     </div>
   ) : null;
 }
 export function ProductCard({ product, score }) {
+  const onSale = product.salePrice != null && Number(product.salePrice) < Number(product.price);
+  const discount = onSale ? Math.floor((Number(product.price) - Number(product.salePrice)) * 100 / Number(product.price)) : 0;
+  const specification = [product.specification?.weightClass, labelOf(product.specification?.shaftFlexibility)].filter(Boolean).join(" · ");
   return (
     <article className="product-card">
       <Link to={"/products/" + product.id}>
@@ -349,18 +386,16 @@ export function ProductCard({ product, score }) {
               alt={product.productName}
             />
           ) : (
-            <span className="no-photo">CHƯA CÓ ẢNH</span>
+            <span className="no-photo"><Package size={36} />CHƯA CÓ ẢNH</span>
           )}
-          {score != null && <strong className="score">{score}% phù hợp</strong>}
+          {score != null && <strong className="score"><Sparkles size={13} />{score}% phù hợp</strong>}
+          {onSale && <strong className="sale-badge">{discount > 0 ? `-${discount}%` : "Ưu đãi"}</strong>}
         </div>
         <div className="product-copy">
           <small>{product.brand?.name}</small>
           <h3>{product.productName}</h3>
-          <p className="price">{money(product.effectivePrice)}</p>
-          <p className="muted">
-            {product.specification?.weightClass} ·{" "}
-            {labelOf(product.specification?.shaftFlexibility)}
-          </p>
+          <p className="price">{money(product.effectivePrice)}{onSale && <del>{money(product.price)}</del>}</p>
+          {specification && <p className="muted">{specification}</p>}
           <Badge value={product.status} />
         </div>
       </Link>
