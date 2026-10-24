@@ -1,0 +1,39 @@
+# Dùng REST Client trong VS Code; thay biến bằng token và ID local.
+@baseUrl = http://localhost:8080/api
+@sellerToken = REPLACE_WITH_SELLER_TOKEN
+@buyerToken = REPLACE_WITH_BUYER_TOKEN
+@adminToken = REPLACE_WITH_ADMIN_TOKEN
+@listingId = 1
+@marketOrderId = 1
+@categoryId = 1
+@brandId = 1
+
+### D15: backend tính toàn bộ factor và price
+POST {{baseUrl}}/valuations
+Authorization: Bearer {{sellerToken}}
+Content-Type: application/json
+
+{"listingId":{{listingId}},"accessoryCondition":"FULL","repairLevel":"NONE"}
+
+### Lịch sử snapshot
+GET {{baseUrl}}/valuations/listing/{{listingId}}
+Authorization: Bearer {{sellerToken}}
+
+### D16: giữ đúng tên/mô tả hiện có khi đổi status
+PUT {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"categoryName":"Vợt","description":"Dụng cụ cầu lông","status":"INACTIVE"}
+
+### Brand DELETE là soft disable
+DELETE {{baseUrl}}/brands/{{brandId}}
+Authorization: Bearer {{adminToken}}
+
+### D17: trước payment; không nhận actor/reason tùy ý
+POST {{baseUrl}}/market-orders/{{marketOrderId}}/cancel
+Authorization: Bearer {{buyerToken}}
+
+### ADMIN only; size 1..100
+GET {{baseUrl}}/admin/audit-logs?page=0&size=20
+Authorization: Bearer {{adminToken}}

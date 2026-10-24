@@ -1,0 +1,12 @@
+suite	tests	failures	errors	skipped
+com.badminton.auth.AuthServiceTest	8	0	0	0
+com.badminton.integration.AuthMySqlIntegrationTest	1	0	0	0
+com.badminton.integration.CommerceMySqlIntegrationTest	18	0	0	0
+com.badminton.rating.SellerReputationCalculatorTest	4	0	0	0
+com.badminton.recommendation.MatchScoreCalculatorTest	4	0	0	0
+com.badminton.security.AuthApiTest	11	0	0	0
+com.badminton.security.JwtServiceTest	6	0	0	0
+com.badminton.user.AddressServiceTest	3	0	0	0
+com.badminton.user.UserServiceTest	3	0	0	0
+com.badminton.valuation.ConditionScoreTest	2	0	0	0
+com.badminton.valuation.ValuationCalculatorTest	6	0	0	0

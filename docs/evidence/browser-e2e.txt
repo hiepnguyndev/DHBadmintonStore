@@ -1,0 +1,6 @@
+2026-10-08 — Chromium / Playwright / real Spring Boot + isolated MySQL 8.4.6
+3 passed (9.7s)
+Auth registration/login/profile/address/logout
+PlayerProfile/recommendations/favorite/cart/checkout/cancel
+Seller valuation classifications/result/history (two immutable snapshots)
+No mocked API responses. Does not cover all staff/Marketplace browser workflows.

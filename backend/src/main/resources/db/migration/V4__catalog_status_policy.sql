@@ -1,0 +1,4 @@
+UPDATE categories SET status = 'ACTIVE' WHERE status IS NULL;
+UPDATE brands SET status = 'ACTIVE' WHERE status IS NULL;
+ALTER TABLE categories MODIFY status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', ADD CONSTRAINT ck_category_status CHECK (status IN ('ACTIVE', 'INACTIVE'));
+ALTER TABLE brands MODIFY status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', ADD CONSTRAINT ck_brand_status CHECK (status IN ('ACTIVE', 'INACTIVE'));

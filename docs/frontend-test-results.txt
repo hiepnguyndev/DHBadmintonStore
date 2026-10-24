@@ -1,0 +1,15 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> dh-badminton-store@0.1.0 test
+> vitest run
+
+
+ RUN  v3.2.4 /workspace/scratch/09fe6faee9d3/dh-badminton-store/frontend
+
+ ✓ src/test/auth.test.jsx (4 tests) 334ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  08:36:57
+   Duration  1.48s (transform 123ms, setup 40ms, collect 595ms, tests 334ms, environment 286ms, prepare 61ms)
+

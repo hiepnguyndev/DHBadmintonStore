@@ -1,0 +1,44 @@
+[
+  {
+    "name": "com.badminton.auth.AuthServiceTest",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.badminton.integration.AuthMySqlIntegrationTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "1"
+  },
+  {
+    "name": "com.badminton.security.AuthApiTest",
+    "tests": "11",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.badminton.security.JwtServiceTest",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.badminton.user.AddressServiceTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "com.badminton.user.UserServiceTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]
